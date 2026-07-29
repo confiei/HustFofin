@@ -158,6 +158,6 @@ Quer contribuir com código? Fork → branch → PR. Toda ajuda é bem-vinda.
 
 <br>
 
-<sub>Se o projeto te ajudou, deixa uma ⭐ — faz diferença!</sub>
+<sub>Se o projeto te ajudou, porfavor deixa uma ⭐</sub>
 
 </div>
