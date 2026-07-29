@@ -54,7 +54,7 @@ const RPC_DEFAULTS: RpcConfig = {
   detalhes: ">.<",
   estado: "",
   nome: "HustFofin",
-  imagemUrl: "https://imgur.com/lc9XmYH",
+  imagemUrl: "https://raw.githubusercontent.com/iwonw/assets/main/cutecute.png",
   botoes: [],
   desativado: false,
 }

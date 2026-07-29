@@ -13,7 +13,7 @@ let lastAppId: string | null = null
 let startTimestamp: number | null = null
 
 const DEFAULT_APP_ID = '1531860127961972958'
-const DEFAULT_IMAGE = 'https://imgur.com/lc9XmYH'
+const DEFAULT_IMAGE = 'https://raw.githubusercontent.com/iwonw/assets/main/cutecute.png'
 
 /**
  * Busca o ícone da aplicação Discord pelo ID

@@ -392,7 +392,7 @@ function ImageLightbox({ images, initialIndex, onClose, onContextMenu }: {
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <button onClick={() => setZoom((z) => Math.min(z + 0.5, 5))} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+              <button onClick={() => setZoom((z) => Math.min(z + 0.5, 5))} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-purple-600/30 transition-colors">
                 <ZoomIn size={18} />
               </button>
             </TooltipTrigger>
@@ -400,7 +400,7 @@ function ImageLightbox({ images, initialIndex, onClose, onContextMenu }: {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button onClick={() => setZoom((z) => Math.max(z - 0.5, 0.5))} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+              <button onClick={() => setZoom((z) => Math.min(z + 0.5, 5))} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-purple-600/30 transition-colors">
                 <ZoomOut size={18} />
               </button>
             </TooltipTrigger>
@@ -409,21 +409,21 @@ function ImageLightbox({ images, initialIndex, onClose, onContextMenu }: {
           {zoom !== 1 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <button onClick={resetView} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+                <button onClick={() => setZoom((z) => Math.min(z + 0.5, 5))} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-purple-600/30 transition-colors">
                   <RotateCcw size={18} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom">Resetar zoom</TooltipContent>
             </Tooltip>
           )}
-          <div className="w-px h-5 bg-white/10 mx-1" />
+          <div className="w-px h-5 bg-purple-500/20 mx-1" />
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => {
                   if (current.att.url?.startsWith("http")) window.electronAPI?.shell.openExternal(current.att.url)
                 }}
-                className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-purple-600/20 transition-colors"
               >
                 <ExternalLink size={18} />
               </button>
@@ -432,16 +432,16 @@ function ImageLightbox({ images, initialIndex, onClose, onContextMenu }: {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button onClick={handleDownload} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+              <button onClick={handleDownload} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-purple-600/20 transition-colors">
                 <Download size={18} />
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Baixar</TooltipContent>
           </Tooltip>
-          <div className="w-px h-5 bg-white/10 mx-1" />
+          <div className="w-px h-5 bg-purple-500/20 mx-1" />
           <Tooltip>
             <TooltipTrigger asChild>
-              <button onClick={onClose} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+              <button onClick={onClose} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-purple-600/20 transition-colors">
                 <X size={18} />
               </button>
             </TooltipTrigger>
@@ -777,7 +777,7 @@ function AudioPlayer({ url, name, size, contentType }: { url: string; name: stri
 
       <button
         onClick={togglePlay}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/15 transition-colors"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-600/20 hover:bg-purple-600/30 transition-colors"
       >
         {playing ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
@@ -819,7 +819,7 @@ function AudioPlayer({ url, name, size, contentType }: { url: string; name: stri
 
       <button
         onClick={cycleSpeed}
-        className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-white/70 hover:bg-white/15 hover:text-white transition-colors"
+       className="shrink-0 rounded bg-purple-600/20 px-1.5 py-0.5 text-[11px] font-semibold text-purple-200 hover:bg-purple-600/30 hover:text-white transition-colors"
       >
         {speed}X
       </button>

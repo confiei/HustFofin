@@ -276,20 +276,20 @@ export default function MidiaPage() {
                   href={getMediaUrl(item)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full bg-white/10 p-2 hover:bg-white/20 transition-colors"
+                  className="rounded-full bg-purple-600/20 p-2 hover:bg-purple-600/30 transition-colors"
                 >
                   <ExternalLink size={14} className="text-white" />
                 </a>
                 <a
                   href={getMediaUrl(item)}
                   download={item.attachment.filename}
-                  className="rounded-full bg-white/10 p-2 hover:bg-white/20 transition-colors"
+                  className="rounded-full bg-purple-600/20 p-2 hover:bg-purple-600/30 transition-colors"
                 >
                   <Download size={14} className="text-white" />
                 </a>
                 <button
                   onClick={() => copyId(item.messageId)}
-                  className="rounded-full bg-white/10 p-2 hover:bg-white/20 transition-colors"
+                  className="rounded-full bg-purple-600/20 p-2 hover:bg-purple-600/30 transition-colors"
                   title="Copiar ID da mensagem"
                 >
                   {copiedId === item.messageId ? <CheckCheck size={14} className="text-emerald-400" /> : <Copy size={14} className="text-white" />}
