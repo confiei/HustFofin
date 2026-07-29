@@ -398,7 +398,7 @@ export function WhatsNew() {
             onClick={dismiss}
             className="borda-neon rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/25 active:scale-[0.97]"
           >
-            Entendi 6767676!
+            Entendifofo!
           </button>
         </div>
       </div>
