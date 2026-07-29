@@ -4,7 +4,7 @@
 
 <br>
 
-### [⬇️ Baixar Última Versão](https://github.com/iwonw/HustFofin/releases/latest)
+### [⬇️ Baixar Última Versão](https://github.com/confiei/HustFofin/releases/latest)
 
 ---
 
@@ -98,7 +98,7 @@
 
 ## 🚀 Começando
 
-1. Baixe o App na [página de releases](https://github.com/iwonw/HustFofin/releases/latest)
+1. Baixe o App na [página de releases](https://github.com/confiei/HustFofin/releases/latest)
 2. Execute o `.exe`
 3. Adicione seu token do Discord
 4. Conecte a conta e acesse as ferramentas pelas tab
@@ -144,7 +144,7 @@ Apenas para Windows
 
 ## 🤝 Contribuindo
 
-Encontrou um bug ou quer ajudar no projeto? Deixei seu comentario em: [issue](https://github.com/iwonw/HustFofin/issues).
+Encontrou um bug ou quer ajudar no projeto? Deixei seu comentario em: [issue](https://github.com/confiei/HustFofin/issues).
 
 Quer contribuir com código? Fork → branch → PR. Toda ajuda é bem-vinda.
 
@@ -154,7 +154,7 @@ Quer contribuir com código? Fork → branch → PR. Toda ajuda é bem-vinda.
 
 <div align="center">
 
-<sub>Novo fork Desenvolvido por <a href="https://github.com/iwonw">@iwonw</a></sub>
+<sub>Novo fork Desenvolvido por <a href="https://github.com/confiei">@confiei</a></sub>
 
 <br>
 

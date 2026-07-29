@@ -73,7 +73,7 @@ linux:
 
 publish:
   provider: github
-  owner: iwonw
+  owner: confiei
   repo: HustFofin
   releaseType: release
 

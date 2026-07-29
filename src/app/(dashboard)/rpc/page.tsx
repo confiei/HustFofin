@@ -54,7 +54,7 @@ const RPC_DEFAULTS: RpcConfig = {
   detalhes: ">.<",
   estado: "Feito por Mv",
   nome: "HustFofin",
-  imagemUrl: "https://raw.githubusercontent.com/iwonw/assets/main/cutecute.png",
+  imagemUrl: "https://raw.githubusercontent.com/confiei/assets/main/cutecute.png",
   botoes: [],
   desativado: false,
 }

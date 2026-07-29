@@ -5,7 +5,7 @@ import fs from 'fs'
 
 const isDev = !app.isPackaged
 
-const GITHUB_OWNER = 'iwonw'
+const GITHUB_OWNER = 'confiei'
 const GITHUB_REPO = 'HustFofin'
 
 const FORCE_LOCAL_CHANGELOG = process.env.FORCE_LOCAL_CHANGELOG === '1'
