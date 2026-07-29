@@ -391,7 +391,7 @@ export function WhatsNew() {
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
           >
             <ExternalLink className="h-3 w-3" />
-            teste4444
+            Ver no GitHub
           </button>
 
           <button
