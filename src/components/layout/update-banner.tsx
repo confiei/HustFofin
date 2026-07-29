@@ -75,7 +75,7 @@ export function UpdateBanner() {
               className="ml-auto flex items-center gap-1.5 rounded-lg bg-emerald-500/90 px-3.5 py-1.5 text-xs font-semibold text-black shadow-sm shadow-emerald-500/20 transition-all hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-500/25 active:scale-[0.97]"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              teste444
+              teste4444
             </button>
           )}
 
