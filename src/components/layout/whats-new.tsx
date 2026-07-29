@@ -391,14 +391,14 @@ export function WhatsNew() {
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
           >
             <ExternalLink className="h-3 w-3" />
-            Ver no GitHub
+            teste444
           </button>
 
           <button
             onClick={dismiss}
             className="borda-neon rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/25 active:scale-[0.97]"
           >
-            Entendifofo!
+            Entendi!
           </button>
         </div>
       </div>
