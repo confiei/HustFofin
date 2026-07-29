@@ -52,7 +52,7 @@ interface AppInfo {
 const RPC_DEFAULTS: RpcConfig = {
   applicationId: "1531860127961972958",
   detalhes: ">.<",
-  estado: "",
+  estado: "Feito por Mv",
   nome: "HustFofin",
   imagemUrl: "https://raw.githubusercontent.com/iwonw/assets/main/cutecute.png",
   botoes: [],
