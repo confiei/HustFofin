@@ -14,6 +14,7 @@ const Elevador = lazy(() => import('./app/(dashboard)/elevador/page'))
 const EnsurdecerCall = lazy(() => import('./app/(dashboard)/ensurdecer-call/page'))
 const FarmCall = lazy(() => import('./app/(dashboard)/farm-call/page'))
 const FecharDms = lazy(() => import('./app/(dashboard)/fechar-dms/page'))
+const Marketplace = lazy(() => import('./app/(dashboard)/marketplace/page'))
 const LimparDm = lazy(() => import('./app/(dashboard)/limpar-dm/page'))
 const LimparDmAmigos = lazy(() => import('./app/(dashboard)/limpar-dm-amigos/page'))
 const LimparDms = lazy(() => import('./app/(dashboard)/limpar-dms/page'))
@@ -69,6 +70,7 @@ export function AppRoutes() {
           <Route path="ensurdecer-call" element={<EnsurdecerCall />} />
           <Route path="farm-call" element={<FarmCall />} />
           <Route path="fechar-dms" element={<FecharDms />} />
+          <Route path="marketplace" element={<Marketplace />} />
           <Route path="limpar-dm" element={<LimparDm />} />
           <Route path="limpar-dm-amigos" element={<LimparDmAmigos />} />
           <Route path="limpar-dms" element={<LimparDms />} />

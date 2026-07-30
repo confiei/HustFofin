@@ -1,5 +1,3 @@
-
-
 import { useState } from "react"
 import { ScanLine, KeyRound, Loader2, Plus, CheckCircle, XCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -103,8 +101,12 @@ export function AddAccountModal({ open, onClose, onAdded }: AddAccountModalProps
       <div className="relative w-full max-w-md rounded-xl border border-border bg-card shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2 className="text-base font-semibold text-foreground">Adicionar Conta</h2>
-          <button onClick={handleClose} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X size={18} />
+          <button 
+            onClick={handleClose} 
+            className="group relative flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 transition-all duration-300 hover:bg-red-500 hover:text-white hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] active:scale-95"
+            title="Fechar"
+          >
+            <X size={16} className="transition-transform duration-300 group-hover:rotate-90" />
           </button>
         </div>
 

@@ -1,5 +1,4 @@
-
-import { useEffect, useState, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
 import {
   Activity,
@@ -140,7 +139,6 @@ const ferramentasRapidas = [
     titulo: "Mensagens",
     descricao: "Limpar DMs, package e mais",
     icone: <MessageSquare size={20} />,
-    cor: "from-red-500/20 to-red-500/5",
     corIcone: "text-red-400 bg-red-500/15",
     itens: [
       { nome: "Limpar DM", href: "/limpar-dm", icone: <Trash2 size={14} /> },
@@ -154,7 +152,6 @@ const ferramentasRapidas = [
     titulo: "Conta",
     descricao: "Gerenciar amigos e servidores",
     icone: <User size={20} />,
-    cor: "from-orange-500/20 to-orange-500/5",
     corIcone: "text-orange-400 bg-orange-500/15",
     itens: [
       { nome: "Remover Amigos", href: "/remover-amigos", icone: <UserMinus size={14} /> },
@@ -165,7 +162,6 @@ const ferramentasRapidas = [
     titulo: "Servidores",
     descricao: "Clonar e scraper",
     icone: <Copy size={20} />,
-    cor: "from-blue-500/20 to-blue-500/5",
     corIcone: "text-blue-400 bg-blue-500/15",
     itens: [
       { nome: "Clonar Servidor", href: "/clonar-servidor", icone: <Copy size={14} /> },
@@ -176,7 +172,6 @@ const ferramentasRapidas = [
     titulo: "Call",
     descricao: "Ferramentas de voz",
     icone: <PhoneOff size={20} />,
-    cor: "from-green-500/20 to-green-500/5",
     corIcone: "text-green-400 bg-green-500/15",
     itens: [
       { nome: "Desconectar", href: "/desconectar-call", icone: <PhoneOff size={14} /> },
@@ -186,14 +181,13 @@ const ferramentasRapidas = [
       { nome: "Ensurdecer", href: "/ensurdecer-call", icone: <VolumeX size={14} /> },
       { nome: "Elevador", href: "/elevador", icone: <MoveRight size={14} /> },
       { nome: "Coleira", href: "/coleira", icone: <Anchor size={14} /> },
-      { nome: "Proteger", href: "/proteger-user", icone: <Shield size={14} /> },
+      { nome: "Proteger", href: "/proteger-user", icone: <ProtegerIcon /> },
     ],
   },
   {
     titulo: "Sistema",
     descricao: "RPC, backups e configurações",
     icone: <Settings size={20} />,
-    cor: "from-purple-500/20 to-purple-500/5",
     corIcone: "text-purple-400 bg-purple-500/15",
     itens: [
       { nome: "Rich Presence", href: "/rpc", icone: <Gamepad2 size={14} /> },
@@ -203,6 +197,10 @@ const ferramentasRapidas = [
     ],
   },
 ]
+
+function ProtegerIcon() {
+  return <Shield size={14} />
+}
 
 const TOOL_LABELS: Record<string, string> = {
   'limpar-dm': 'Limpar DM',
@@ -258,7 +256,7 @@ export default function PaginaInicial() {
   const [apiOnline, setApiOnline] = useState(false)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
 
-  useEffect(() => {
+  useState(() => {
     const fetchStatus = () => {
       api.getStatus().then((res) => {
         setStatus(res.data as ServerStatus)
@@ -270,13 +268,13 @@ export default function PaginaInicial() {
     fetchStatus()
     const interval = setInterval(fetchStatus, 5000)
     return () => clearInterval(interval)
-  }, [])
+  })
 
-  useEffect(() => {
+  useState(() => {
     api.getAnalytics()
       .then((res) => setAnalytics(res.data as AnalyticsData))
       .catch(() => {})
-  }, [])
+  })
 
   const isOnline = apiOnline || connected
 
@@ -325,8 +323,8 @@ export default function PaginaInicial() {
   const user = activeToken?.user
 
   return (
-    <div className="space-y-5">
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card/80 to-primary/5">
+    <div className="relative space-y-5">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card/80 to-primary/5 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/8 via-transparent to-transparent" />
         <div className="relative flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -428,7 +426,7 @@ export default function PaginaInicial() {
         ].map((m) => (
           <div
             key={m.label}
-            className="rounded-xl border border-border bg-card/40 p-4 transition-colors hover:border-primary/20"
+            className="rounded-xl border border-border bg-card/40 p-4 transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{m.label}</span>
@@ -445,7 +443,7 @@ export default function PaginaInicial() {
 
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="space-y-5 lg:col-span-3">
-          <div className="rounded-2xl border border-border bg-card/40 p-5">
+          <div className="rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Acesso Rápido</h2>
               <Sparkles size={14} className="text-primary/40" />
@@ -455,7 +453,7 @@ export default function PaginaInicial() {
               {ferramentasRapidas.map((cat) => (
                 <div
                   key={cat.titulo}
-                  className={`group rounded-lg border border-border bg-gradient-to-br ${cat.cor} p-3 transition-all hover:border-primary/20`}
+                  className="group rounded-lg border border-border bg-card/40 p-3 transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5"
                 >
                   <div className="mb-2 flex items-center gap-2">
                     <div className={`flex h-6 w-6 items-center justify-center rounded-md ${cat.corIcone}`}>
@@ -481,7 +479,7 @@ export default function PaginaInicial() {
           </div>
 
           {runningTasks.length > 0 && (
-            <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-card/40 p-5">
+            <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-card/40 p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
               <div className="mb-3 flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                 <h2 className="text-sm font-semibold text-foreground">Tasks em Execução</h2>
@@ -491,7 +489,7 @@ export default function PaginaInicial() {
                 {runningTasks.map((task) => {
                   const pct = task.total > 0 ? Math.round((task.progress / task.total) * 100) : 0
                   return (
-                    <div key={task.id} className="rounded-lg border border-border bg-card/60 p-3">
+                    <div key={task.id} className="rounded-lg border border-border bg-card/60 p-3 transition-all duration-300 hover:border-primary/40">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-medium text-foreground">
                           {TOOL_LABELS[task.tool] || task.tool}
@@ -516,7 +514,7 @@ export default function PaginaInicial() {
             </div>
           )}
 
-          <div className="rounded-2xl border border-border bg-card/40 p-5">
+          <div className="rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Atividade Recente</h2>
               <Link to="/analytics" className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors">
@@ -552,15 +550,15 @@ export default function PaginaInicial() {
 
         <div className="space-y-5 lg:col-span-2">
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-border bg-card/40 p-3 text-center">
+            <div className="rounded-xl border border-border bg-card/40 p-3 text-center transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5">
               <div className="text-lg font-bold tabular-nums text-foreground">{tasks.length}</div>
               <div className="text-[10px] text-muted-foreground">Total Tasks</div>
             </div>
-            <div className="rounded-xl border border-border bg-card/40 p-3 text-center">
+            <div className="rounded-xl border border-border bg-card/40 p-3 text-center transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5">
               <div className="text-lg font-bold tabular-nums text-green-400">{completedTasks}</div>
               <div className="text-[10px] text-muted-foreground">Concluídas</div>
             </div>
-            <div className="rounded-xl border border-border bg-card/40 p-3 text-center">
+            <div className="rounded-xl border border-border bg-card/40 p-3 text-center transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5">
               <div className={`text-lg font-bold tabular-nums ${errorTasks > 0 ? 'text-red-400' : 'text-foreground'}`}>{errorTasks}</div>
               <div className="text-[10px] text-muted-foreground">Erros</div>
             </div>
@@ -574,7 +572,7 @@ export default function PaginaInicial() {
 
             if (!hasNitro && !hasBoost) {
               return (
-                <div className="rounded-2xl border border-border bg-card/40 p-5">
+                <div className="rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles size={16} className="text-[#f47fff]" />
                     <h2 className="text-sm font-semibold text-foreground">Nitro & Boost</h2>
@@ -592,7 +590,7 @@ export default function PaginaInicial() {
                 {hasNitro && (() => {
                   const nitro = getNitroProgress(premiumSince)
                   return (
-                    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
+                    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
                       <div className="px-4 pt-4 pb-2">
                         <div className="flex items-center gap-2 mb-0.5">
                           <Sparkles size={14} className="text-[#f47fff]" />
@@ -665,7 +663,7 @@ export default function PaginaInicial() {
                 {hasBoost && (() => {
                   const boost = getBoostProgress(boostSince)
                   return (
-                    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
+                    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
                       <div className="px-4 pt-4 pb-2">
                         <div className="flex items-center gap-2 mb-0.5">
                           <Zap size={14} className="text-[#ff73fa]" />
@@ -733,7 +731,7 @@ export default function PaginaInicial() {
             )
           })()}
 
-          <div className="rounded-2xl border border-border bg-card/40 p-5">
+          <div className="rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
             <h2 className="mb-3 text-sm font-semibold text-foreground">Links Rápidos</h2>
             <div className="space-y-1">
               {[
@@ -763,7 +761,7 @@ export default function PaginaInicial() {
       </div>
 
       {status && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/30 px-5 py-3">
+        <div className="flex flex-flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/30 px-5 py-3 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
             <span className="text-xs text-muted-foreground">

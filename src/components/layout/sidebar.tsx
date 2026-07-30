@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
@@ -47,6 +46,7 @@ import {
   Headphones,
   Crosshair,
   BellRing,
+  Store
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -82,6 +82,7 @@ const secoesMenu: SecaoMenu[] = [
       { titulo: "Visão Geral", icone: <LayoutDashboard size={16} />, href: "/" },
       { titulo: "Perfil", icone: <User size={16} />, href: "/perfil" },
       { titulo: "Analytics", icone: <BarChart3 size={16} />, href: "/analytics" },
+      { titulo: "Marketplace", icone: <Store size={16} />, href: "/marketplace" },
     ],
   },
   {

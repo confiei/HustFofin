@@ -53,7 +53,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Segoe UI',sys
 </style></head><body>
 <div class="container">
   <div class="spinner"></div>
-  <span class="text">Coletando cp no seu pc...</span>
+  <span class="text">Carregando HustRich...</span>
 </div>
 </body></html>`
 }
