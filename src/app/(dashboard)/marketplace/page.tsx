@@ -141,6 +141,30 @@ export default function MarketplacePage() {
   const modalNotificacaoRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // Efeito para verificar sessão salva no localStorage simulando o "logins.json"
+  useEffect(() => {
+    try {
+      const savedLoginSession = localStorage.getItem("logins.json")
+      if (savedLoginSession) {
+        const parsedUser = JSON.parse(savedLoginSession)
+        if (parsedUser && parsedUser.username) {
+          setIsLoggedIn(true)
+          setCurrentUser(parsedUser)
+          setCurrentClientName(parsedUser.username)
+          setCurrentClientAvatar(parsedUser.avatarUrl || "https://cdn.discordapp.com/embed/avatars/0.png")
+          if (parsedUser.username === "Mv" || parsedUser.username === "Davi") {
+            setIsAdminMode(true)
+            setCurrentClientId("admin_" + parsedUser.username.toLowerCase())
+          } else {
+            setCurrentClientId("user_" + parsedUser.username)
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao carregar sessão salva", e)
+    }
+  }, [])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [conversations, activeConversationId, chatAberto])
@@ -303,15 +327,15 @@ export default function MarketplacePage() {
     },
     {
       id: "5",
-      title: "Conta OGU Rara",
-      category: "Ogu",
-      price: 350.00,
+      title: "10 Hotmail",
+      category: "Emails",
+      price: 10.00,
       images: [
-        "https://cdn.discordapp.com/attachments/1532243391314919456/1532248684719247412/image.png?ex=6a6c294a&is=6a6ad7ca&hm=fc7ffa7adb5ff43acc9f234d2e10beeac9878dfcdc65ba8f408c6a99f9be690b&"
+        "https://cdn.discordapp.com/attachments/1532243391314919456/1532564653530419331/hotmail.webp?ex=6a6d4f8f&is=6a6bfe0f&hm=7144feb6f08934f3cb27d7d2d433da3af8e7ed25f5b7d77c4e86d52baabd3080&"
       ],
       seller: "Mv",
       verified: true,
-      description: "Conta OG com emblemas exclusivos."
+      description: "10 Email de Outlook ( Melhor para OG de Contas! )"
     }
   ]
 
@@ -559,6 +583,10 @@ export default function MarketplacePage() {
       setCurrentClientName(foundUser.username)
       setCurrentClientAvatar(safeUserData.avatarUrl)
       setCurrentClientId("user_" + foundUser.username)
+      
+      // Salvando os dados no "logins.json" (localStorage) para manter a sessão ativa ao fechar ou dar reload
+      localStorage.setItem("logins.json", JSON.stringify(safeUserData))
+
       setShowAuthModal(false)
       setAuthPassword("")
       setAuthError("")
@@ -598,6 +626,10 @@ export default function MarketplacePage() {
     setCurrentClientAvatar(adminUser.avatarUrl || "https://cdn.discordapp.com/embed/avatars/0.png")
     setCurrentClientId("admin_" + recognizedName.toLowerCase())
     setIsAdminMode(true)
+
+    // Salvando sessão de admin no "logins.json"
+    localStorage.setItem("logins.json", JSON.stringify(adminUser))
+
     setShowAuthModal(false)
     setAuthPassword("")
     setAuthError("")
@@ -610,7 +642,13 @@ export default function MarketplacePage() {
 
     const updatedAvatar = newAvatarInput.trim()
     setCurrentClientAvatar(updatedAvatar)
-    setCurrentUser({ ...currentUser, avatarUrl: updatedAvatar })
+    const updatedUser = { ...currentUser, avatarUrl: updatedAvatar }
+    setCurrentUser(updatedUser)
+
+    // Atualiza o arquivo "logins.json" salvo no localStorage
+    try {
+      localStorage.setItem("logins.json", JSON.stringify(updatedUser))
+    } catch (e) {}
 
     try {
       const existingUsers = JSON.parse(localStorage.getItem("marketplace_users") || "[]")
@@ -628,6 +666,9 @@ export default function MarketplacePage() {
   }
 
   function handleLogout() {
+    // Remove os dados salvos do "logins.json" ao deslogar
+    localStorage.removeItem("logins.json")
+
     setIsLoggedIn(false)
     setCurrentUser(null)
     setCurrentClientName("Visitante")
@@ -710,7 +751,7 @@ export default function MarketplacePage() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-neutral-200 to-neutral-500 bg-clip-text text-transparent flex items-center gap-2.5">
               <img src="https://cdn.discordapp.com/attachments/1532243391314919456/1532476462869909614/Shopping_Bags.gif?ex=6a6cfd6c&is=6a6babec&hm=d5c5c3aedb03aef2626fa6abb918eb240d8fdc7f57384941defac655a6c3fee7&" alt="Shopping Bags" className="w-8 h-8 object-contain" />
-              Insignias & Contas Marketplace
+              Marketplace
             </h1>
           </div>
 
@@ -766,6 +807,10 @@ export default function MarketplacePage() {
           <p className="text-neutral-400 text-sm max-w-xl">
             Explore ativos digitais exclusivos, contas verificadas e customizações de alto padrão com entrega instantânea.
           </p>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black border border-neutral-800 text-neutral-400 text-xs font-medium mt-4">
+            <ShieldCheck size={14} className="text-neutral-300" />
+            <span>Marketplace Verificado & Seguro</span>
+          </div>
         </div>
       </div>
 
@@ -1064,7 +1109,7 @@ export default function MarketplacePage() {
 
                     <div className="flex flex-col items-end">
                       <ShieldAlert size={16} className={captchaStatus === "success" ? "text-emerald-400" : "text-neutral-500"} />
-                      <span className="text-[9px] text-neutral-500 mt-0.5">Cloudflare Shield</span>
+                      <span className="text-[9px] text-neutral-500 mt-0.5">Feito por Mv</span>
                     </div>
                   </div>
                 </div>
@@ -1381,72 +1426,7 @@ export default function MarketplacePage() {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-neutral-900 pb-6 pt-2">
           <div className="flex flex-wrap items-center gap-3 w-full justify-between">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setDropdownAberto(!dropdownAberto)}
-                className="flex items-center justify-between bg-black hover:bg-neutral-950 border border-neutral-800 hover:border-neutral-700 rounded-xl px-4 py-3 gap-3 text-xs text-neutral-200 transition-all duration-200 cursor-pointer active:scale-95 group min-w-[170px]"
-              >
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal size={15} className="text-neutral-400 group-hover:text-white transition-colors flex-shrink-0" />
-                  <span className="font-medium">{getSortLabel()}</span>
-                </div>
-                <ChevronDown 
-                  size={14} 
-                  className={`text-neutral-400 transition-transform duration-300 ${dropdownAberto ? "rotate-180 text-white" : ""}`} 
-                />
-              </button>
-
-              {dropdownAberto && (
-                <div className="absolute left-0 mt-2 w-52 bg-black border border-neutral-800 rounded-2xl p-1.5 shadow-2xl z-50 animate-dropdownSlide">
-                  <button
-                    onClick={() => {
-                      setSortBy("todos")
-                      setDropdownAberto(false)
-                    }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ${
-                      sortBy === "todos" 
-                        ? "bg-neutral-900 text-white shadow-md" 
-                        : "text-neutral-400 hover:text-white hover:bg-neutral-950"
-                    }`}
-                  >
-                    <span>Todos</span>
-                    {sortBy === "todos" && <Check size={14} className="text-white" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setSortBy("menor-preco")
-                      setDropdownAberto(false)
-                    }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ${
-                      sortBy === "menor-preco" 
-                        ? "bg-neutral-900 text-white shadow-md" 
-                        : "text-neutral-400 hover:text-white hover:bg-neutral-950"
-                    }`}
-                  >
-                    <span>Menor preço</span>
-                    {sortBy === "menor-preco" && <Check size={14} className="text-white" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setSortBy("maior-preco")
-                      setDropdownAberto(false)
-                    }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ${
-                      sortBy === "maior-preco" 
-                        ? "bg-neutral-900 text-white shadow-md" 
-                        : "text-neutral-400 hover:text-white hover:bg-neutral-950"
-                    }`}
-                  >
-                    <span>Maior preço</span>
-                    {sortBy === "maior-preco" && <Check size={14} className="text-white" />}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 flex-1 max-w-md justify-end">
+            <div className="flex items-center gap-3 flex-1 max-w-md justify-start">
               <div className="relative flex-1 transition-all duration-300 focus-within:scale-[1.02]">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 transition-transform duration-300" size={16} />
                 <input
@@ -1456,6 +1436,73 @@ export default function MarketplacePage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-black border border-neutral-800 rounded-xl pl-10 pr-4 py-3 text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 transition-all duration-300"
                 />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownAberto(!dropdownAberto)}
+                  className="flex items-center justify-between bg-black hover:bg-neutral-950 border border-neutral-800 hover:border-neutral-700 rounded-xl px-4 py-3 gap-3 text-xs text-neutral-200 transition-all duration-200 cursor-pointer active:scale-95 group min-w-[170px]"
+                >
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal size={15} className="text-neutral-400 group-hover:text-white transition-colors flex-shrink-0" />
+                    <span className="font-medium">{getSortLabel()}</span>
+                  </div>
+                  <ChevronDown 
+                    size={14} 
+                    className={`text-neutral-400 transition-transform duration-300 ${dropdownAberto ? "rotate-180 text-white" : ""}`} 
+                  />
+                </button>
+
+                {dropdownAberto && (
+                  <div className="absolute left-0 mt-2 w-52 bg-black border border-neutral-800 rounded-2xl p-1.5 shadow-2xl z-50 animate-dropdownSlide">
+                    <button
+                      onClick={() => {
+                        setSortBy("todos")
+                        setDropdownAberto(false)
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ${
+                        sortBy === "todos" 
+                          ? "bg-neutral-900 text-white shadow-md" 
+                          : "text-neutral-400 hover:text-white hover:bg-neutral-950"
+                      }`}
+                    >
+                      <span>Todos</span>
+                      {sortBy === "todos" && <Check size={14} className="text-white" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSortBy("menor-preco")
+                        setDropdownAberto(false)
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ${
+                        sortBy === "menor-preco" 
+                          ? "bg-neutral-900 text-white shadow-md" 
+                          : "text-neutral-400 hover:text-white hover:bg-neutral-950"
+                      }`}
+                    >
+                      <span>Menor preço</span>
+                      {sortBy === "menor-preco" && <Check size={14} className="text-white" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSortBy("maior-preco")
+                        setDropdownAberto(false)
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ${
+                        sortBy === "maior-preco" 
+                          ? "bg-neutral-900 text-white shadow-md" 
+                          : "text-neutral-400 hover:text-white hover:bg-neutral-950"
+                      }`}
+                    >
+                      <span>Maior preço</span>
+                      {sortBy === "maior-preco" && <Check size={14} className="text-white" />}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="relative" ref={modalNotificacaoRef}>
@@ -1552,13 +1599,6 @@ export default function MarketplacePage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center gap-6 mb-8 relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black border border-neutral-800 text-neutral-400 text-xs font-medium">
-            <ShieldCheck size={14} className="text-neutral-300" />
-            <span>Marketplace Verificado & Seguro</span>
           </div>
         </div>
 
