@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react"
 import { Search, Loader2, Plus, CheckCircle, XCircle, KeyRound, ScanLine } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -97,57 +99,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     }
   }
 
-  // Gerador dinâmico de flocos de neve realistas no background
-  useEffect(() => {
-    const snowContainer = document.getElementById("snow-container")
-    if (!snowContainer) return
-
-    snowContainer.innerHTML = ""
-    const count = 90
-    for (let i = 0; i < count; i++) {
-      const flake = document.createElement("div")
-      flake.className = "absolute pointer-events-none animate-snow"
-      flake.innerHTML = `
-      <svg viewBox="0 0 64 64" fill="none">
-        <path 
-          d="M32 2V62M5.9 17L58.1 47M58.1 17L5.9 47M17 5.9L47 58.1M47 5.9L17 58.1"
-          stroke="white"
-          stroke-width="4"
-          stroke-linecap="round"
-        />
-      </svg>
-      `
-      
-      const size = Math.random() * 4 + 1
-      const left = Math.random() * 100
-      const duration = Math.random() * 14 + 6
-      const delay = Math.random() * 5
-      const opacity = Math.random() * 0.5 + 0.3
-      const blur = Math.random() * 1.2
-
-      flake.style.width = `${size * 4}px`
-      flake.style.height = `${size * 4}px`
-      flake.style.left = `${left}%`
-      flake.style.top = `-10px`
-      flake.style.opacity = `${opacity}`
-      flake.style.animationDuration = `${duration}s`
-      flake.style.animationDelay = `${delay}s`
-      flake.style.boxShadow = `
-      0 0 ${size * 4}px rgba(255,255,255,0.9),
-      0 0 ${size * 8}px rgba(255,255,255,0.4)
-      `
-      const rotation = Math.random() * 360
-      flake.style.filter = `
-      drop-shadow(0 0 4px rgba(255,255,255,0.9))
-      blur(${blur}px)
-      `
-      const scale = Math.random() * 0.8 + 0.6
-      flake.style.transform = `scale(${scale}) rotate(${rotation}deg)`
-
-      snowContainer.appendChild(flake)
-    }
-  }, [])
-
   const handleScan = async () => {
     setEtapa("scanning")
     try {
@@ -212,29 +163,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
 
-        @keyframes fall {
-          0% {
-            transform: translateY(-20px) translateX(-30px) rotate(0deg);
-          }
-          25% {
-            transform: translateY(25vh) translateX(40px) rotate(90deg);
-          }
-          50% {
-            transform: translateY(50vh) translateX(-20px) rotate(180deg);
-          }
-          75% {
-            transform: translateY(75vh) translateX(50px) rotate(270deg);
-          }
-          100% {
-            transform: translateY(110vh) translateX(-30px) rotate(360deg);
-          }
-        }
-        .animate-snow {
-          animation-name: fall;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-          will-change: transform;
-        }
         @keyframes pulseSlow {
           0%, 100% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 0.6; transform: scale(1.1); }
@@ -263,9 +191,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           animation: titleShimmer 6s ease infinite;
         }
       `}</style>
-
-      {/* Container da neve caindo na tela toda */}
-      <div id="snow-container" className="absolute inset-0 z-0 overflow-hidden pointer-events-none" />
 
       {/* Barra de controle da janela do Electron */}
       <div className="absolute top-0 left-0 right-0 z-50 flex h-10 items-center justify-end px-2" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
