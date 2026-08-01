@@ -1,5 +1,3 @@
-
-
 import { useLocation } from "react-router-dom"
 import { Link } from "react-router-dom"
 import { ChevronRight, Home, Minus, Square, X } from "lucide-react"
@@ -104,7 +102,7 @@ export function NavegacaoSuperior() {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+        <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
         <span className="text-xs text-muted-foreground">Online</span>
 
         {typeof window !== 'undefined' && window.electronAPI && (
