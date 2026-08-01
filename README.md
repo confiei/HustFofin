@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://i.imgur.com/8QfJx6H.gif" width="820" alt="HustFofin Banner">
+<img src="https://cdn.discordapp.com/attachments/1532243391314919456/1532932042403221654/bce3c11d524a3e8c2e2efed0a8db210a.gif?ex=6a6ea5b7&is=6a6d5437&hm=4c9061bcfa34b6fc33e4a6ae8b58b06a9ead48932325a94f5e324b48ca432bcb&" width="820" alt="HustFofin Banner">
 
 <br>
 
@@ -34,7 +34,7 @@ Uma ferramenta desktop com diversas utilidades organizadas em uma interface mode
 
 # 🛠️ Ferramentas
 
-> Mais de **20 ferramentas** divididas em categorias para facilitar o acesso.
+> Mais de **20 ferramentas.**
 
 ---
 
@@ -211,19 +211,6 @@ https://github.com/confiei/HustFofin/issues
 
 ---
 
-# 🤝 Contribuição
-
-Quer ajudar no projeto?
-
-1. Faça um Fork
-2. Crie uma Branch
-3. Faça suas alterações
-4. Envie um Pull Request
-
-Toda contribuição é bem-vinda.
-
----
-
 <div align="center">
 
 <img src="https://img.shields.io/github/license/confiei/HustFofin?style=for-the-badge">
@@ -237,7 +224,7 @@ Desenvolvido por <a href="https://github.com/confiei">@confiei</a>
 <br>
 
 <sub>
-⭐ Se gostou do projeto, deixe uma estrela!
+O projeto te ajudou? deixe uma⭐! ➡ Isso me ajuda a continuar o projeto e trazer mais atualizações.
 </sub>
 
 </div>
