@@ -191,6 +191,10 @@ Deixe seu comentário em:
 
 <br>
 
+<sub>
+O projeto te ajudou? deixe uma ⭐! ➡ Isso me ajuda a continuar o projeto e trazer mais atualizações.
+</sub>
+
 ---
 
 <div align="center">
@@ -198,11 +202,3 @@ Deixe seu comentário em:
 <sub>
 Novo fork desenvolvido por <a href="https://github.com/confiei">@confiei</a>
 </sub>
-
-<br>
-
-<sub>
-O projeto te ajudou? deixe uma ⭐! ➡ Isso me ajuda a continuar o projeto e trazer mais atualizações.
-</sub>
-
-</div>
