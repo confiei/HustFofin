@@ -24,9 +24,9 @@
 
 <br>
 
-## 🧰 Ferramentas
+## 🛠 Ferramentas
 
-> **+20 ferramentas** organizadas em 6 categorias — tudo acessível pelo menu lateral.
+> **+20 ferramentas.**
 
 <details>
 <summary>&nbsp;<b>💬 Mensagens</b></summary>
@@ -188,14 +188,6 @@ Encontrou um bug ou quer ajudar no projeto?
 
 Deixe seu comentário em:
 [issue](https://github.com/confiei/HustFofin/issues)
-
-Quer contribuir com código?
-
-```
-Fork → Branch → Pull Request
-```
-
-Toda ajuda é bem-vinda.
 
 <br>
 
