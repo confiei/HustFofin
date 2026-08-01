@@ -186,6 +186,7 @@ Apenas para Windows.
 
 Encontrou um bug ou quer ajudar no projeto?
 
+
 Deixe seu comentário em:
 [issue](https://github.com/confiei/HustFofin/issues)
 
