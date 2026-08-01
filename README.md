@@ -199,12 +199,10 @@ Deixe seu comentário em:
 Novo fork desenvolvido por <a href="https://github.com/confiei">@confiei</a>
 </sub>
 
-<br><br>
+<br>
 
 <sub>
-O projeto te ajudou? deixe uma ⭐!
-<br>
-➡ Isso me ajuda a continuar o projeto e trazer mais atualizações.
+O projeto te ajudou? deixe uma ⭐! ➡ Isso me ajuda a continuar o projeto e trazer mais atualizações.
 </sub>
 
 </div>
