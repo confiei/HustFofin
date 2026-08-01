@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { X, Sparkles, Bug, Zap, Wrench, ExternalLink } from "lucide-react"
 
 const GITHUB_OWNER = "confiei"
-const GITHUB_REPO = "HustFofin-V2"
+const GITHUB_REPO = "HustFofin"
 const STORAGE_KEY = "changelog-versao-vista"
 const FORCE_PREVIEW = import.meta.env.VITE_FORCE_CHANGELOG === '1'
 

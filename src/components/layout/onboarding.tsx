@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search, Loader2, Plus, CheckCircle, XCircle, KeyRound, ScanLine } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,31 +32,117 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const [manualToken, setManualToken] = useState("")
   const [manualAdding, setManualAdding] = useState(false)
 
+  // Referência para o card 3D
+  const cardRef = useRef<HTMLDivElement>(null)
+  const rafId = useRef<number | null>(null)
+  
+  // Variáveis para interpolação suave (lerp) sem re-renderizar o componente React a cada frame
+  const mousePos = useRef({ x: 0, y: 0, active: false })
+  const currentStyle = useRef({ rx: 0, ry: 0, scale: 1 })
+
+  useEffect(() => {
+    // Loop de animação contínuo do card 3D
+    const updateMotion = () => {
+      const card = cardRef.current
+      if (card) {
+        const target = mousePos.current
+        const curr = currentStyle.current
+
+        const ease = 0.12
+        curr.rx += (target.y - curr.rx) * ease
+        curr.ry += (target.x - curr.ry) * ease
+
+        const targetScale = target.active ? 1.015 : 1 
+        curr.scale += (targetScale - curr.scale) * 0.1
+
+        card.style.transform = `perspective(1000px) rotateX(${curr.rx.toFixed(2)}deg) rotateY(${curr.ry.toFixed(2)}deg) scale3d(${curr.scale.toFixed(4)}, ${curr.scale.toFixed(4)}, 1)`
+      }
+      rafId.current = requestAnimationFrame(updateMotion)
+    }
+
+    rafId.current = requestAnimationFrame(updateMotion)
+    return () => {
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current)
+        rafId.current = null
+      }
+    }
+  }, [])
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
+    
+    const mouseX = (e.clientX - rect.left) / width - 0.5
+    const mouseY = (e.clientY - rect.top) / height - 0.5
+    
+    mousePos.current = {
+      x: mouseX * 8,
+      y: -mouseY * 8,
+      active: true,
+    }
+  }
+
+  const handleMouseEnter = () => {
+    mousePos.current.active = true
+  }
+
+  const handleMouseLeave = () => {
+    mousePos.current = {
+      x: 0,
+      y: 0,
+      active: false,
+    }
+  }
+
   // Gerador dinâmico de flocos de neve realistas no background
   useEffect(() => {
     const snowContainer = document.getElementById("snow-container")
     if (!snowContainer) return
 
     snowContainer.innerHTML = ""
-    const count = 55 // Quantidade de flocos para o efeito realista
+    const count = 90
     for (let i = 0; i < count; i++) {
       const flake = document.createElement("div")
-      flake.className = "absolute rounded-full bg-white pointer-events-none animate-snow"
+      flake.className = "absolute pointer-events-none animate-snow"
+      flake.innerHTML = `
+      <svg viewBox="0 0 64 64" fill="none">
+        <path 
+          d="M32 2V62M5.9 17L58.1 47M58.1 17L5.9 47M17 5.9L47 58.1M47 5.9L17 58.1"
+          stroke="white"
+          stroke-width="4"
+          stroke-linecap="round"
+        />
+      </svg>
+      `
       
-      const size = Math.random() * 3 + 1.5 // Tamanho entre 1.5px e 4.5px
-      const left = Math.random() * 100 // Posição horizontal em %
-      const duration = Math.random() * 6 + 4 // Velocidade de queda (4s a 10s)
-      const delay = Math.random() * 5 // Atraso inicial aleatório
-      const opacity = Math.random() * 0.7 + 0.3 // Opacidade variada
+      const size = Math.random() * 4 + 1
+      const left = Math.random() * 100
+      const duration = Math.random() * 14 + 6
+      const delay = Math.random() * 5
+      const opacity = Math.random() * 0.5 + 0.3
+      const blur = Math.random() * 1.2
 
-      flake.style.width = `${size}px`
-      flake.style.height = `${size}px`
+      flake.style.width = `${size * 4}px`
+      flake.style.height = `${size * 4}px`
       flake.style.left = `${left}%`
       flake.style.top = `-10px`
       flake.style.opacity = `${opacity}`
       flake.style.animationDuration = `${duration}s`
       flake.style.animationDelay = `${delay}s`
-      flake.style.boxShadow = `0 0 ${size * 2}px rgba(255, 255, 255, 0.8)`
+      flake.style.boxShadow = `
+      0 0 ${size * 4}px rgba(255,255,255,0.9),
+      0 0 ${size * 8}px rgba(255,255,255,0.4)
+      `
+      const rotation = Math.random() * 360
+      flake.style.filter = `
+      drop-shadow(0 0 4px rgba(255,255,255,0.9))
+      blur(${blur}px)
+      `
+      const scale = Math.random() * 0.8 + 0.6
+      flake.style.transform = `scale(${scale}) rotate(${rotation}deg)`
 
       snowContainer.appendChild(flake)
     }
@@ -122,24 +208,32 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#09050b] overflow-hidden select-none" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-      {/* Estilos globais e animações customizadas para a neve e efeitos roxos */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0d0505] overflow-hidden select-none" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
+
         @keyframes fall {
           0% {
-            transform: translateY(-20px) translateX(0px);
+            transform: translateY(-20px) translateX(-30px) rotate(0deg);
+          }
+          25% {
+            transform: translateY(25vh) translateX(40px) rotate(90deg);
           }
           50% {
-            transform: translateY(50vh) translateX(15px);
+            transform: translateY(50vh) translateX(-20px) rotate(180deg);
+          }
+          75% {
+            transform: translateY(75vh) translateX(50px) rotate(270deg);
           }
           100% {
-            transform: translateY(105vh) translateX(-15px);
+            transform: translateY(110vh) translateX(-30px) rotate(360deg);
           }
         }
         .animate-snow {
           animation-name: fall;
           animation-timing-function: linear;
           animation-iteration-count: infinite;
+          will-change: transform;
         }
         @keyframes pulseSlow {
           0%, 100% { opacity: 0.3; transform: scale(1); }
@@ -148,13 +242,25 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         .animate-pulse-slow {
           animation: pulseSlow 8s ease-in-out infinite;
         }
-        .hover-card-effect {
-          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        @keyframes floatModern {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-8px) rotate(1deg); }
         }
-        .hover-card-effect:hover {
-          transform: translateY(-4px) scale(1.01);
-          box-shadow: 0 20px 40px -15px rgba(168, 85, 247, 0.35);
-          border-color: rgba(168, 85, 247, 0.4);
+        .animate-float-modern {
+          animation: floatModern 4s ease-in-out infinite;
+        }
+        @keyframes titleShimmer {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .font-hustrich {
+          font-family: 'Cinzel Decorative', cursive, serif;
+          background: linear-gradient(270deg, #ff4d4d, #ff8080, #ff1a1a, #ffb3b3);
+          background-size: 300% 300%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: titleShimmer 6s ease infinite;
         }
       `}</style>
 
@@ -165,257 +271,307 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div className="absolute top-0 left-0 right-0 z-50 flex h-10 items-center justify-end px-2" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
         {typeof window !== 'undefined' && (window as any).electronAPI && (
           <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-            <button onClick={() => (window as any).electronAPI.window.minimize()} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-purple-950/60 hover:text-purple-200">
+            <button onClick={() => (window as any).electronAPI.window.minimize()} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-red-950/60 hover:text-red-200 hover:scale-105">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/></svg>
             </button>
-            <button onClick={() => (window as any).electronAPI.window.maximize()} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-purple-950/60 hover:text-purple-200">
+            <button onClick={() => (window as any).electronAPI.window.maximize()} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-red-950/60 hover:text-red-200 hover:scale-105">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
             </button>
-            <button onClick={() => (window as any).electronAPI.window.close()} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/80 hover:text-white">
+            <button onClick={() => (window as any).electronAPI.window.close()} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-destructive/80 hover:text-white hover:scale-105">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
         )}
       </div>
 
-      {/* Background dinâmico roxo com gradientes e animações suaves */}
+      {/* Background dinâmico vermelho com gradientes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-purple-600/20 blur-[120px] animate-pulse-slow" />
-        <div className="absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-[120px] animate-pulse-slow" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-violet-900/10 blur-[150px]" />
+        <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-red-600/20 blur-[120px] animate-pulse-slow" />
+        <div className="absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-rose-600/20 blur-[120px] animate-pulse-slow" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-red-950/10 blur-[150px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-lg px-6">
         <div className="mb-8 flex flex-col items-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-600/30 shadow-lg shadow-purple-600/20 ring-4 ring-purple-500/20 backdrop-blur-md transition-transform duration-300 hover:scale-105 overflow-hidden p-0">
+          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-600/25 shadow-xl shadow-red-600/30 ring-4 ring-red-500/20 backdrop-blur-xl overflow-hidden p-0 animate-float-modern" style={{ transform: 'none' }}>
             <img 
-              src="https://raw.githubusercontent.com/confiei/assets/main/49e6cc3e76ca0fd7cde13258ec92bf1f.gif" 
+              src="https://cdn.discordapp.com/attachments/1532243391314919456/1532948699271925770/5d89de1e1682258269ff169bf24960ab.jpg?ex=6a6eb53a&is=6a6d63ba&hm=bd371c93dc32aeb39b100ff598a94221581389f6a874b1b42f4cb599f1f4a8e2&" 
               alt="Icon" 
               className="h-full w-full object-cover" 
             />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-violet-300 to-indigo-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]">HustFofin</h1>
-          <p className="mt-2 text-sm text-purple-300/70 font-medium tracking-wide">Feito com 💜 por Mv</p>
+          <h1 className="text-3xl font-bold font-hustrich tracking-wider drop-shadow-[0_0_20px_rgba(239,68,68,0.6)]">HustRich</h1>
+          <p className="mt-2 text-sm text-red-300/70 font-medium tracking-wide">Feito com 💖 por Mv</p>
         </div>
 
         {etapa === "inicio" && (
-          <Card className="border-purple-500/20 bg-purple-950/40 backdrop-blur-2xl shadow-2xl shadow-purple-950/50 hover-card-effect">
-            <CardHeader className="text-center">
-              <CardTitle className="text-xl text-purple-100">Bem-vindo!</CardTitle>
-              <CardDescription className="text-purple-300/70">
-                Nenhuma conta encontrada. Como deseja adicionar sua primeira conta?
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                onClick={handleScan}
-                className="w-full h-14 bg-purple-600 text-white hover:bg-purple-500 text-base shadow-lg shadow-purple-600/25 transition-all duration-300 hover:scale-[1.01]"
-              >
-                <ScanLine size={20} className="mr-3" />
-                Buscar automaticamente
-              </Button>
-              <p className="text-xs text-center text-purple-300/60">
-                Procura tokens no Discord instalado no seu PC
-              </p>
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-purple-500/20" />
+          <div 
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="relative rounded-2xl overflow-hidden will-change-transform"
+            style={{ transformStyle: 'preserve-3d', transition: 'box-shadow 0.3s ease' }}
+          >
+            <Card className="border-red-500/20 bg-red-950/40 backdrop-blur-2xl shadow-2xl shadow-red-950/80 relative overflow-hidden">
+              <CardHeader className="text-center relative z-20" style={{ transform: 'translateZ(35px)' }}>
+                <CardTitle className="text-xl text-red-100">Bem-vindo!</CardTitle>
+                <CardDescription className="text-red-300/70">
+                  Nenhuma conta encontrada. Como deseja adicionar sua primeira conta?
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 relative z-20" style={{ transform: 'translateZ(20px)' }}>
+                <div style={{ transform: 'translateZ(25px)' }}>
+                  <Button
+                    onClick={handleScan}
+                    className="w-full h-14 bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-500 hover:to-rose-500 text-base shadow-lg shadow-red-600/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    <ScanLine size={20} className="mr-3 transition-transform duration-300 group-hover:rotate-12" />
+                    Buscar automaticamente
+                  </Button>
                 </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-[#120a17] px-3 text-purple-300/60 rounded-full">ou</span>
+                <p className="text-xs text-center text-red-300/60" style={{ transform: 'translateZ(15px)' }}>
+                  Procura tokens no Discord instalado no seu PC
+                </p>
+                <div className="relative my-4" style={{ transform: 'translateZ(10px)' }}>
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-red-500/20" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-[#170a0a] px-3 text-red-300/60 rounded-full">ou</span>
+                  </div>
                 </div>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => setEtapa("manual")}
-                className="w-full h-12 border-purple-500/30 bg-purple-900/20 text-purple-100 hover:bg-purple-800/40 hover:border-purple-400 transition-all duration-300"
-              >
-                <KeyRound size={18} className="mr-3" />
-                Adicionar manualmente
-              </Button>
-            </CardContent>
-          </Card>
+                <div style={{ transform: 'translateZ(25px)' }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEtapa("manual")}
+                    className="w-full h-12 border-red-500/30 bg-red-900/20 text-red-100 hover:bg-red-800/40 hover:border-red-400 transition-all duration-300 hover:scale-[1.01]"
+                  >
+                    <KeyRound size={18} className="mr-3" />
+                    Adicionar manualmente
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {etapa === "scanning" && (
-          <Card className="border-purple-500/20 bg-purple-950/40 backdrop-blur-2xl shadow-2xl shadow-purple-950/50 hover-card-effect">
-            <CardContent className="flex flex-col items-center py-16">
-              <div className="relative mb-6">
-                <Loader2 size={48} className="animate-spin text-purple-400" />
-                <div className="absolute inset-0 animate-ping rounded-full bg-purple-500/20" />
-              </div>
-              <h3 className="text-lg font-semibold text-purple-100">Buscando tokens...</h3>
-              <p className="mt-2 text-sm text-purple-300/70 text-center">
-                Verificando Discord, Discord Canary, Discord PTB...
-              </p>
-            </CardContent>
-          </Card>
+          <div 
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="relative rounded-2xl overflow-hidden will-change-transform"
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <Card className="border-red-500/20 bg-red-950/40 backdrop-blur-2xl shadow-2xl shadow-red-950/80 relative overflow-hidden">
+              <CardContent className="flex flex-col items-center py-16 relative z-20" style={{ transform: 'translateZ(30px)' }}>
+                <div className="relative mb-6">
+                  <Loader2 size={48} className="animate-spin text-red-400" />
+                  <div className="absolute inset-0 animate-ping rounded-full bg-red-500/20" />
+                </div>
+                <h3 className="text-lg font-semibold text-red-100">Buscando tokens...</h3>
+                <p className="mt-2 text-sm text-red-300/70 text-center">
+                  Verificando Discord, Discord Canary, Discord PTB...
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {etapa === "resultados" && (
-          <Card className="border-purple-500/20 bg-purple-950/40 backdrop-blur-2xl shadow-2xl shadow-purple-950/50 hover-card-effect">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-purple-100">
-                <Search size={20} className="text-purple-400" />
-                Tokens Encontradas
-              </CardTitle>
-              <CardDescription className="text-purple-300/70">
-                {tokensEncontradas.length > 0
-                  ? `${tokensEncontradas.length} conta(s) encontrada(s). Selecione quais deseja adicionar.`
-                  : "Nenhuma token válida encontrada no sistema."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {tokensEncontradas.length > 0 ? (
-                <>
-                  <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                    {tokensEncontradas.map((token, i) => (
-                      <div
-                        key={i}
-                        onClick={() => toggleToken(i)}
-                        className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-200 ${
-                          token.selected
-                            ? "border-purple-500/60 bg-purple-600/15 shadow-md shadow-purple-950"
-                            : "border-purple-500/10 bg-purple-950/20 opacity-60 hover:opacity-80"
-                        }`}
-                      >
-                        <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                          token.selected ? "bg-purple-600 border-purple-500" : "border-purple-500/30"
-                        }`}>
-                          {token.selected && <span className="text-white text-xs font-bold">✓</span>}
-                        </div>
-                        {token.avatar ? (
-                          <img
-                            src={token.avatarUrl || `https://cdn.discordapp.com/avatars/${token.id}/${token.avatar}.png?size=32`}
-                            alt=""
-                            className="h-8 w-8 rounded-full ring-1 ring-purple-500/30"
-                          />
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center ring-1 ring-purple-500/30">
-                            <span className="text-xs font-bold text-purple-200">
-                              {(token.username || "?")[0].toUpperCase()}
-                            </span>
+          <div 
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="relative rounded-2xl overflow-hidden will-change-transform"
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <Card className="border-red-500/20 bg-red-950/40 backdrop-blur-2xl shadow-2xl shadow-red-950/80 relative overflow-hidden">
+              <CardHeader className="relative z-20" style={{ transform: 'translateZ(35px)' }}>
+                <CardTitle className="flex items-center gap-2 text-red-100">
+                  <Search size={20} className="text-red-400" />
+                  Tokens Encontradas
+                </CardTitle>
+                <CardDescription className="text-red-300/70">
+                  {tokensEncontradas.length > 0
+                    ? `${tokensEncontradas.length} conta(s) encontrada(s). Selecione quais deseja adicionar.`
+                    : "Nenhuma token válida encontrada no sistema."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 relative z-20" style={{ transform: 'translateZ(25px)' }}>
+                {tokensEncontradas.length > 0 ? (
+                  <>
+                    <div className="max-h-64 space-y-2 overflow-y-auto pr-1" style={{ transform: 'translateZ(20px)' }}>
+                      {tokensEncontradas.map((token, i) => (
+                        <div
+                          key={i}
+                          onClick={() => toggleToken(i)}
+                          className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-300 hover:scale-[1.01] ${
+                            token.selected
+                              ? "border-red-500/60 bg-red-600/20 shadow-md shadow-red-950/80"
+                              : "border-red-500/10 bg-red-950/20 opacity-60 hover:opacity-90"
+                          }`}
+                        >
+                          <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
+                            token.selected ? "bg-red-600 border-red-500 shadow-sm shadow-red-500/50" : "border-red-500/30"
+                          }`}>
+                            {token.selected && <span className="text-white text-xs font-bold">✓</span>}
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-medium text-purple-100 truncate">
-                              {token.username || "Conta desconhecida"}
-                            </p>
-                            {token.badges && token.badges.length > 0 && (
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                {token.badges.map((badge) => (
-                                  <Tooltip key={badge.name}>
-                                    <TooltipTrigger asChild>
-                                      <img src={badge.url} alt={badge.tooltip} className="h-4 w-4" />
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs bg-purple-900 border-purple-500/30 text-purple-100">{badge.tooltip}</TooltipContent>
-                                  </Tooltip>
-                                ))}
-                              </div>
-                            )}
+                          {token.avatar ? (
+                            <img
+                              src={token.avatarUrl || `https://cdn.discordapp.com/avatars/${token.id}/${token.avatar}.png?size=32`}
+                              alt=""
+                              className="h-8 w-8 rounded-full ring-1 ring-red-500/30"
+                            />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-red-500/20 flex items-center justify-center ring-1 ring-red-500/30">
+                              <span className="text-xs font-bold text-red-200">
+                                {(token.username || "?")[0].toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-medium text-red-100 truncate">
+                                {token.username || "Conta desconhecida"}
+                              </p>
+                              {token.badges && token.badges.length > 0 && (
+                                <div className="flex items-center gap-0.5 shrink-0">
+                                  {token.badges.map((badge) => (
+                                    <Tooltip key={badge.name}>
+                                      <TooltipTrigger asChild>
+                                        <img src={badge.url} alt={badge.tooltip} className="h-4 w-4" />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="text-xs bg-red-900 border-red-500/30 text-red-100">{badge.tooltip}</TooltipContent>
+                                    </Tooltip>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs text-red-300/60 truncate">{token.source} • {token.token}</p>
                           </div>
-                          <p className="text-xs text-purple-300/60 truncate">{token.source} • {token.token}</p>
+                          <CheckCircle size={16} className={token.valid ? "text-emerald-400" : "text-rose-400"} />
                         </div>
-                        <CheckCircle size={16} className={token.valid ? "text-emerald-400" : "text-rose-400"} />
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
 
+                    <div style={{ transform: 'translateZ(30px)' }}>
+                      <Button
+                        onClick={handleAddSelected}
+                        disabled={salvando || !tokensEncontradas.some((t) => t.selected)}
+                        className="w-full bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-600/30 transition-all duration-300 hover:scale-[1.01]"
+                      >
+                        {salvando ? (
+                          <Loader2 size={16} className="animate-spin mr-2" />
+                        ) : (
+                          <Plus size={16} className="mr-2" />
+                        )}
+                        Adicionar {tokensEncontradas.filter((t) => t.selected).length} conta(s)
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center py-4" style={{ transform: 'translateZ(20px)' }}>
+                    <XCircle size={32} className="text-red-400/40 mb-3" />
+                    <p className="text-sm text-red-300/70 mb-4 text-center">
+                      Não foi possível encontrar tokens. Tente adicionar manualmente.
+                    </p>
+                  </div>
+                )}
+
+                <div style={{ transform: 'translateZ(25px)' }}>
                   <Button
-                    onClick={handleAddSelected}
-                    disabled={salvando || !tokensEncontradas.some((t) => t.selected)}
-                    className="w-full bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-600/25 transition-all duration-300"
+                    variant="outline"
+                    onClick={() => setEtapa("manual")}
+                    className="w-full border-red-500/30 bg-red-900/20 text-red-100 hover:bg-red-800/40 hover:border-red-400 transition-all duration-300 hover:scale-[1.01]"
                   >
-                    {salvando ? (
+                    <KeyRound size={16} className="mr-2" />
+                    Adicionar manualmente
+                  </Button>
+                </div>
+
+                {tokensEncontradas.length === 0 && (
+                  <div style={{ transform: 'translateZ(15px)' }}>
+                    <Button
+                      variant="ghost"
+                      onClick={handleScan}
+                      className="w-full text-red-300/70 hover:text-red-100 hover:bg-red-900/20 transition-all duration-200"
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {etapa === "manual" && (
+          <div 
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="relative rounded-2xl overflow-hidden will-change-transform"
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <Card className="border-red-500/20 bg-red-950/40 backdrop-blur-2xl shadow-2xl shadow-red-950/80 relative overflow-hidden">
+              <CardHeader className="relative z-20" style={{ transform: 'translateZ(35px)' }}>
+                <CardTitle className="flex items-center gap-2 text-red-100">
+                  <KeyRound size={20} className="text-red-400" />
+                  Adicionar Token
+                </CardTitle>
+                <CardDescription className="text-red-300/70">Insira o token da sua conta Discord</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 relative z-20" style={{ transform: 'translateZ(25px)' }}>
+                <div className="space-y-2" style={{ transform: 'translateZ(20px)' }}>
+                  <label className="text-sm font-medium text-red-200">Nome da conta</label>
+                  <Input
+                    placeholder="Ex: Minha conta principal"
+                    value={manualLabel}
+                    onChange={(e) => setManualLabel(e.target.value)}
+                    className="border-red-500/30 bg-red-900/20 text-red-100 placeholder:text-red-400/40 focus-visible:ring-red-500 transition-all duration-200"
+                  />
+                </div>
+                <div className="space-y-2" style={{ transform: 'translateZ(20px)' }}>
+                  <label className="text-sm font-medium text-red-200">Token</label>
+                  <Input
+                    placeholder="Cole o token aqui"
+                    value={manualToken}
+                    onChange={(e) => setManualToken(e.target.value)}
+                    className="border-red-500/30 bg-red-900/20 text-red-100 font-mono placeholder:text-red-400/40 focus-visible:ring-red-500 transition-all duration-200"
+                    type="password"
+                  />
+                </div>
+                <div style={{ transform: 'translateZ(30px)' }}>
+                  <Button
+                    onClick={handleManualAdd}
+                    disabled={manualAdding || !manualLabel.trim() || !manualToken.trim()}
+                    className="w-full bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-600/30 transition-all duration-300 hover:scale-[1.01]"
+                  >
+                    {manualAdding ? (
                       <Loader2 size={16} className="animate-spin mr-2" />
                     ) : (
                       <Plus size={16} className="mr-2" />
                     )}
-                    Adicionar {tokensEncontradas.filter((t) => t.selected).length} conta(s)
+                    Adicionar Conta
                   </Button>
-                </>
-              ) : (
-                <div className="flex flex-col items-center py-4">
-                  <XCircle size={32} className="text-purple-400/40 mb-3" />
-                  <p className="text-sm text-purple-300/70 mb-4 text-center">
-                    Não foi possível encontrar tokens. Tente adicionar manualmente.
-                  </p>
                 </div>
-              )}
-
-              <Button
-                variant="outline"
-                onClick={() => setEtapa("manual")}
-                className="w-full border-purple-500/30 bg-purple-900/20 text-purple-100 hover:bg-purple-800/40 hover:border-purple-400 transition-all duration-300"
-              >
-                <KeyRound size={16} className="mr-2" />
-                Adicionar manualmente
-              </Button>
-
-              {tokensEncontradas.length === 0 && (
-                <Button
-                  variant="ghost"
-                  onClick={handleScan}
-                  className="w-full text-purple-300/70 hover:text-purple-100 hover:bg-purple-900/20"
-                >
-                  Tentar novamente
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {etapa === "manual" && (
-          <Card className="border-purple-500/20 bg-purple-950/40 backdrop-blur-2xl shadow-2xl shadow-purple-950/50 hover-card-effect">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-purple-100">
-                <KeyRound size={20} className="text-purple-400" />
-                Adicionar Token
-              </CardTitle>
-              <CardDescription className="text-purple-300/70">Insira o token da sua conta Discord</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-purple-200">Nome da conta</label>
-                <Input
-                  placeholder="Ex: Minha conta principal"
-                  value={manualLabel}
-                  onChange={(e) => setManualLabel(e.target.value)}
-                  className="border-purple-500/30 bg-purple-900/20 text-purple-100 placeholder:text-purple-400/40 focus-visible:ring-purple-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-purple-200">Token</label>
-                <Input
-                  placeholder="Cole o token aqui"
-                  value={manualToken}
-                  onChange={(e) => setManualToken(e.target.value)}
-                  className="border-purple-500/30 bg-purple-900/20 text-purple-100 font-mono placeholder:text-purple-400/40 focus-visible:ring-purple-500"
-                  type="password"
-                />
-              </div>
-              <Button
-                onClick={handleManualAdd}
-                disabled={manualAdding || !manualLabel.trim() || !manualToken.trim()}
-                className="w-full bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-600/25 transition-all duration-300"
-              >
-                {manualAdding ? (
-                  <Loader2 size={16} className="animate-spin mr-2" />
-                ) : (
-                  <Plus size={16} className="mr-2" />
-                )}
-                Adicionar Conta
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setEtapa("inicio")}
-                className="w-full text-purple-300/70 hover:text-purple-100 hover:bg-purple-900/20"
-              >
-                Voltar
-              </Button>
-            </CardContent>
-          </Card>
+                <div style={{ transform: 'translateZ(15px)' }}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setEtapa("inicio")}
+                    className="w-full text-red-300/70 hover:text-red-100 hover:bg-red-900/20 transition-all duration-200"
+                  >
+                    Voltar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
