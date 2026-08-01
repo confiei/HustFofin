@@ -191,9 +191,9 @@ Deixe seu comentário em:
 
 <br>
 
-<sub>
+
 O projeto te ajudou? deixe uma ⭐! ➡ Isso me ajuda a continuar o projeto e trazer mais atualizações.
-</sub>
+
 
 ---
 
