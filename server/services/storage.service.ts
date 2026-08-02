@@ -9,11 +9,11 @@ import type { BackupMeta } from '../features/backup/backup.types'
 const DEFAULT_SETTINGS: AppSettings = {
   tokens: [],
   rpc: {
-    applicationId: '1531860127961972958',
+    applicationId: '1533323878695174155',
     detalhes: '>.<',
     estado: 'Feito por Mv',
     nome: 'HustFofin',
-    imagemUrl: 'https://raw.githubusercontent.com/confiei/assets/main/cutecute.png',
+    imagemUrl: 'https://raw.githubusercontent.com/confiei/assets/main/logo.gif',
     botoes: [],
     desativado: false,
   },

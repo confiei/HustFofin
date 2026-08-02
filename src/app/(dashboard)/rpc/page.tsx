@@ -50,11 +50,11 @@ interface AppInfo {
 }
 
 const RPC_DEFAULTS: RpcConfig = {
-  applicationId: "1531860127961972958",
+  applicationId: "1533323878695174155",
   detalhes: ">.<",
   estado: "Feito por Mv",
   nome: "HustFofin",
-  imagemUrl: "https://raw.githubusercontent.com/confiei/assets/main/cutecute.png",
+  imagemUrl: "https://raw.githubusercontent.com/confiei/assets/main/logo.gif",
   botoes: [],
   desativado: false,
 }
@@ -289,7 +289,7 @@ export default function PaginaRPC() {
             <div className="space-y-3">
               <div className="flex gap-2">
                 <Input
-                  placeholder="ID da Aplicação (ex: 1531860127961972958)"
+                  placeholder="ID da Aplicação (ex: 1533323878695174155)"
                   value={config.applicationId}
                   onChange={(e) => setConfig((c) => ({ ...c, applicationId: e.target.value }))}
                   className="font-mono text-sm"

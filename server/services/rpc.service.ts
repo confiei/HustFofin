@@ -12,8 +12,8 @@ let appIconCache: string | null = null
 let lastAppId: string | null = null
 let startTimestamp: number | null = null
 
-const DEFAULT_APP_ID = '1531860127961972958'
-const DEFAULT_IMAGE = 'https://raw.githubusercontent.com/confiei/assets/main/cutecute.png'
+const DEFAULT_APP_ID = '1533323878695174155'
+const DEFAULT_IMAGE = 'https://raw.githubusercontent.com/confiei/assets/main/logo.gif'
 
 /**
  * Busca o ícone da aplicação Discord pelo ID
