@@ -1,6 +1,6 @@
 {
   "name": "HustRich",
-  "version": "1.6.0",
+  "version": "1.6.5",
   "private": false,
   "main": "dist-electron/electron/main.js",
   "scripts": {
