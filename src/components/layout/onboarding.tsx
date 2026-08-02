@@ -212,7 +212,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             />
           </div>
           <h1 className="text-3xl font-bold font-hustrich tracking-wider drop-shadow-[0_0_20px_rgba(156,163,175,0.4)]">HustRich</h1>
-          <p className="mt-2 text-sm text-neutral-400 font-medium tracking-wide">Feito com 💖 por Mv</p>
+          <p className="mt-2 text-sm text-neutral-400 font-medium tracking-wide">Feito com 💖 por Mv | NewEra</p>
         </div>
 
         {etapa === "inicio" && (

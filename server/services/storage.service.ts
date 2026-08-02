@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   rpc: {
     applicationId: '1533323878695174155',
     detalhes: '>.<',
-    estado: 'Feito por Mv',
+    estado: 'Feito por Mv | NewEra',
     nome: 'HustFofin',
     imagemUrl: 'https://raw.githubusercontent.com/confiei/assets/main/logo.gif',
     botoes: [],
