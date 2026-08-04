@@ -125,6 +125,9 @@ importers:
       discord.js-selfbot-v13:
         specifier: https://github.com/brunnoxw/discord.js-selfbot-v13/archive/refs/heads/main.tar.gz
         version: https://github.com/brunnoxw/discord.js-selfbot-v13/archive/refs/heads/main.tar.gz(supports-color@8.1.1)
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       electron-updater:
         specifier: ^6.8.3
         version: 6.8.9(supports-color@8.1.1)
@@ -2021,6 +2024,10 @@ packages:
 
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -5742,6 +5749,8 @@ snapshots:
       dotenv: 16.6.1
 
   dotenv@16.6.1: {}
+
+  dotenv@17.4.2: {}
 
   dunder-proto@1.0.1:
     dependencies:

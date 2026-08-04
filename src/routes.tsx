@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import LayoutDashboard from './app/(dashboard)/layout'
+import TempEmailPage from './app/(dashboard)/temp-mail/page'
 
 const Home = lazy(() => import('./app/(dashboard)/page'))
 const Alertas = lazy(() => import('./app/(dashboard)/alertas/page'))
@@ -14,7 +15,7 @@ const Elevador = lazy(() => import('./app/(dashboard)/elevador/page'))
 const EnsurdecerCall = lazy(() => import('./app/(dashboard)/ensurdecer-call/page'))
 const FarmCall = lazy(() => import('./app/(dashboard)/farm-call/page'))
 const FecharDms = lazy(() => import('./app/(dashboard)/fechar-dms/page'))
-const EmBreve = lazy(() => import('./app/(dashboard)/em-breve/page'))
+const EmBreve = lazy(() => import('./app/(dashboard)/temp-mail/page'))
 const LimparDm = lazy(() => import('./app/(dashboard)/limpar-dm/page'))
 const LimparDmAmigos = lazy(() => import('./app/(dashboard)/limpar-dm-amigos/page'))
 const LimparDms = lazy(() => import('./app/(dashboard)/limpar-dms/page'))
@@ -70,7 +71,7 @@ export function AppRoutes() {
           <Route path="ensurdecer-call" element={<EnsurdecerCall />} />
           <Route path="farm-call" element={<FarmCall />} />
           <Route path="fechar-dms" element={<FecharDms />} />
-          <Route path="em-breve" element={<EmBreve />} />
+          <Route path="temp-mail" element={<TempEmailPage />} />
           <Route path="limpar-dm" element={<LimparDm />} />
           <Route path="limpar-dm-amigos" element={<LimparDmAmigos />} />
           <Route path="limpar-dms" element={<LimparDms />} />
