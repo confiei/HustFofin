@@ -359,7 +359,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
               <div className="w-16 h-16 mb-2 rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border border-blue-400/40 shadow-xl shadow-blue-950/80 backdrop-blur-md pointer-events-auto overflow-hidden">
                 <img 
-                  src="https://cdn.discordapp.com/attachments/1533884627972915302/1533884648944304319/10.gif?ex=6a721ce6&is=6a70cb66&hm=3cd6923ae299cac226bb1beed972d3ab303a32418a80817c948bc951b19557a5&" 
+                  src="https://raw.githubusercontent.com/confiei/assets/main/10.gif" 
                   alt="Loading GIF" 
                   className="w-full h-full object-cover" 
                 />
@@ -383,7 +383,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-neutral-900/50 shadow-xl shadow-black/50 ring-4 ring-neutral-800/30 backdrop-blur-xl overflow-hidden p-0 animate-float-modern" style={{ transform: 'none' }}>
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/30 overflow-hidden">
                 <img 
-                  src="https://cdn.discordapp.com/attachments/1533884627972915302/1533884648944304319/10.gif?ex=6a721ce6&is=6a70cb66&hm=3cd6923ae299cac226bb1beed972d3ab303a32418a80817c948bc951b19557a5&" 
+                  src="https://raw.githubusercontent.com/confiei/assets/main/10.gif" 
                   alt="Logo GIF" 
                   className="w-full h-full object-cover" 
                 />
@@ -410,7 +410,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <CardHeader className="text-center relative z-20 flex flex-col items-center justify-center w-full" style={{ transform: 'translateZ(35px)' }}>
                   <div className="flex items-center justify-center gap-2 w-full text-center">
                     <img 
-                      src="https://cdn.discordapp.com/attachments/1533884627972915302/1533906328563487012/blue_fofincr.gif?ex=6a723117&is=6a70df97&hm=b38d0cc0400412fb16bf1364c2e2ca38e55c42d6d5591147de76acda8afb57ef&" 
+                      src="https://raw.githubusercontent.com/confiei/assets/main/blue_fofincr.gif" 
                       alt="Ícone" 
                       className="w-5 h-5 object-contain animate-pulse shrink-0" 
                     />
