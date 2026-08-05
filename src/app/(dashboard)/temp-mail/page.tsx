@@ -579,7 +579,7 @@ export default function TempEmailPage() {
               <div className="flex items-center gap-4">
                 <div className="flex shrink-0">
                   <img 
-                    src="https://cdn.discordapp.com/attachments/1533884627972915302/1534014537651716136/c4604ba4541a1348122a2df3f65efe60.jpg?ex=6a7295de&is=6a71445e&hm=2d7144f73c595bda7eed8be9b697b7ccb68394fb101d4daeec4a1b5d7b832f42&" 
+                    src="https://raw.githubusercontent.com/confiei/assets/main/c4604ba4541a1348122a2df3f65efe60.jpg" 
                     alt="TempMail Icon" 
                     className="h-14 w-14 object-cover rounded-2xl"
                   />
