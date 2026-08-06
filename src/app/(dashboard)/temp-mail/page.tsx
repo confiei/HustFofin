@@ -5,7 +5,7 @@ import { createPortal } from "react-dom"
 import { 
   Mail, Copy, RefreshCw, Inbox, Trash2, ArrowLeft, 
   Shield, Sparkles, Clock, AlertCircle, Loader2, CheckCheck, Trash,
-  Circle, Radio, Check, CheckSquare, Square, X, AlertTriangle, Download
+  Circle, Radio, Check, CheckSquare, Square, X, AlertTriangle, Download, Menu
 } from "lucide-react"
 
 interface Message {
@@ -40,6 +40,15 @@ export default function TempEmailPage() {
   const [extractingMessages, setExtractingMessages] = useState(false)
   const [copied, setCopied] = useState(false)
   
+  // Estados para contadores dinâmicos do Usage Profile
+  const [dailyCreations, setDailyCreations] = useState(0)
+  const [storageBytes, setStorageBytes] = useState(0)
+
+  // Estado para controlar a Navbar lateral (direita)
+  const [showNavbar, setShowNavbar] = useState(false)
+  const navbarRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+
   // Estado para controlar o painel flutuante de aviso
   const [showWarningPanel, setShowWarningPanel] = useState(false)
   const warningButtonRef = useRef<HTMLButtonElement>(null)
@@ -50,7 +59,7 @@ export default function TempEmailPage() {
   const [syncStatus, setSyncStatus] = useState<string>("Sincronizado")
   const [lastSynced, setLastSynced] = useState<string>("Agora mesmo")
   
-  // Timer de existência do email temporário (segundos)
+  // Timer de existência do email temporário (segundos) - expira em 24 horas (86400 segundos)
   const [emailAgeSeconds, setEmailAgeSeconds] = useState(0)
   
   // Modal de confirmação padrão para exclusão total
@@ -64,6 +73,33 @@ export default function TempEmailPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const previousMessageCountRef = useRef<number>(0)
 
+  // Carregar conta salva do localStorage ao iniciar
+  useEffect(() => {
+    const savedAccount = localStorage.getItem("temp_mail_account")
+    const savedTimestamp = localStorage.getItem("temp_mail_timestamp")
+    const savedCreations = localStorage.getItem("temp_mail_creations")
+    
+    if (savedCreations) {
+      setDailyCreations(parseInt(savedCreations, 10))
+    }
+    
+    if (savedAccount && savedTimestamp) {
+      const parsedAccount = JSON.parse(savedAccount)
+      const creationTime = parseInt(savedTimestamp, 10)
+      const now = Date.now()
+      const elapsedSeconds = Math.floor((now - creationTime) / 1000)
+      
+      if (elapsedSeconds < 86400) {
+        setAccount(parsedAccount)
+        setEmailAgeSeconds(elapsedSeconds)
+        fetchMessages(parsedAccount.token, true)
+      } else {
+        localStorage.removeItem("temp_mail_account")
+        localStorage.removeItem("temp_mail_timestamp")
+      }
+    }
+  }, [])
+
   // Atualizar a posição do popup com base nas coordenadas do botão
   const updatePanelPosition = useCallback(() => {
     if (warningButtonRef.current) {
@@ -75,7 +111,7 @@ export default function TempEmailPage() {
     }
   }, [])
 
-  // Fechar o painel flutuante ao clicar fora ou redimensionar/rolar
+  // Fechar o painel flutuante e a navbar ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -86,6 +122,16 @@ export default function TempEmailPage() {
         !warningButtonRef.current.contains(event.target as Node)
       ) {
         setShowWarningPanel(false)
+      }
+
+      if (
+        showNavbar &&
+        navbarRef.current &&
+        !navbarRef.current.contains(event.target as Node) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowNavbar(false)
       }
     }
 
@@ -108,7 +154,7 @@ export default function TempEmailPage() {
       window.removeEventListener("resize", handleResizeOrScroll)
       window.removeEventListener("scroll", handleResizeOrScroll, true)
     }
-  }, [showWarningPanel, updatePanelPosition])
+  }, [showWarningPanel, showNavbar, updatePanelPosition])
 
   const toggleWarningPanel = () => {
     if (!showWarningPanel) {
@@ -117,20 +163,30 @@ export default function TempEmailPage() {
     setShowWarningPanel((prev) => !prev)
   }
 
-  // Timer para contagem do tempo de existência do email
+  // Timer para contagem do tempo de existência do email (expira em 24h)
   useEffect(() => {
     if (!account) return
     const timer = setInterval(() => {
-      setEmailAgeSeconds((prev) => prev + 1)
+      setEmailAgeSeconds((prev) => {
+        if (prev >= 86400) {
+          setAccount(null)
+          localStorage.removeItem("temp_mail_account")
+          localStorage.removeItem("temp_mail_timestamp")
+          return 86400
+        }
+        return prev + 1
+      })
     }, 1000)
     return () => clearInterval(timer)
   }, [account])
 
-  const formatAgeTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60)
-    const secs = totalSeconds % 60
-    if (mins === 0) return `${secs}s`
-    return `${mins}m ${secs}s`
+  // Formatar tempo restante para expirar em 24h
+  const formatExpiresIn = (totalSeconds: number) => {
+    const remaining = Math.max(0, 86400 - totalSeconds)
+    const hours = Math.floor(remaining / 3600)
+    const minutes = Math.floor((remaining % 3600) / 60)
+    const seconds = remaining % 60
+    return `${hours}h ${minutes < 10 ? '0' + minutes : minutes}m ${seconds < 10 ? '0' + seconds : seconds}s`
   }
 
   const showNotification = (title: string, text: string, type: 'success' | 'info' | 'alert' = 'success') => {
@@ -151,6 +207,7 @@ export default function TempEmailPage() {
     setEmailAgeSeconds(0)
     setIsSelectionMode(false)
     setSelectedEmailIds([])
+    setShowNavbar(false)
 
     try {
       setSyncStatus("Gerando...")
@@ -185,6 +242,13 @@ export default function TempEmailPage() {
       const newAccount = { email: address, token: tokenData.token }
       setAccount(newAccount)
       localStorage.setItem("temp_mail_account", JSON.stringify(newAccount))
+      localStorage.setItem("temp_mail_timestamp", Date.now().toString())
+      
+      setDailyCreations((prev) => {
+        const nextVal = prev + 1
+        localStorage.setItem("temp_mail_creations", nextVal.toString())
+        return nextVal
+      })
       
       showNotification("Sucesso", "Email temporário criado com sucesso!", "success")
       setSyncStatus("Sincronizado")
@@ -223,6 +287,13 @@ export default function TempEmailPage() {
       previousMessageCountRef.current = items.length
       setMessages(items)
       
+      let totalBytes = 0
+      items.forEach(msg => {
+        const approxSize = (msg.subject?.length || 0) + (msg.intro?.length || 0) + (msg.text?.length || 500)
+        totalBytes += approxSize
+      })
+      setStorageBytes(totalBytes)
+      
       setSyncStatus("Inbox atualizada")
       setLastSynced(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
     } catch (error) {
@@ -252,6 +323,11 @@ export default function TempEmailPage() {
       })
       const data = await res.json()
       setSelectedMessage(data)
+
+      if (data.text || data.html) {
+        const detailedSize = (data.text?.length || 0) + (data.html?.[0]?.length || 0)
+        setStorageBytes((prev) => prev + detailedSize)
+      }
 
       if (!data.seen) {
         await fetch(`https://api.mail.tm/messages/${id}`, {
@@ -395,6 +471,14 @@ export default function TempEmailPage() {
       )
       setMessages([])
       setSelectedMessage(null)
+      setStorageBytes(0)
+      
+      setDailyCreations((prev) => {
+        const nextVal = Math.max(0, prev - 1)
+        localStorage.setItem("temp_mail_creations", nextVal.toString())
+        return nextVal
+      })
+
       previousMessageCountRef.current = 0
       setShowDeleteModal(false)
       showNotification("Excluído", "Todos os emails foram removidos com sucesso.", "success")
@@ -437,10 +521,25 @@ export default function TempEmailPage() {
         )
       )
 
-      setMessages((prev) => prev.filter(msg => !selectedEmailIds.includes(msg.id)))
+      setMessages((prev) => {
+        const updated = prev.filter(msg => !selectedEmailIds.includes(msg.id))
+        let newBytes = 0
+        updated.forEach(msg => {
+          newBytes += (msg.subject?.length || 0) + (msg.intro?.length || 0) + 500
+        })
+        setStorageBytes(newBytes)
+        return updated
+      })
+
       if (selectedMessage && selectedEmailIds.includes(selectedMessage.id)) {
         setSelectedMessage(null)
       }
+
+      setDailyCreations((prev) => {
+        const nextVal = Math.max(0, prev - 1)
+        localStorage.setItem("temp_mail_creations", nextVal.toString())
+        return nextVal
+      })
 
       previousMessageCountRef.current = messages.length - count
       setSelectedEmailIds([])
@@ -478,29 +577,35 @@ export default function TempEmailPage() {
     showNotification("Copiado", "Conteúdo do email copiado para a área de transferência!", "success")
   }
 
+  const maxStorageBytes = 240 * 1024 * 1024
+  const storagePercentage = Math.min(100, (storageBytes / maxStorageBytes) * 100)
+  const formattedStorageSize = storageBytes < 1024 * 1024 
+    ? `${(storageBytes / 1024).toFixed(1)} KB` 
+    : `${(storageBytes / (1024 * 1024)).toFixed(2)} MB`
+
+  const maxDailyCreations = 10
+  const creationsPercentage = Math.min(100, (dailyCreations / maxDailyCreations) * 100)
+
   return (
     <div className="relative space-y-5">
-      {/* Background com gradiente animado suave e tom cinza/neutro discreto */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-neutral-500/5 rounded-full blur-[140px] pointer-events-none animate-pulse duration-1000" />
-      <div className="absolute bottom-10 right-1/4 w-[600px] h-[600px] bg-neutral-900/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-rose-500/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Sistema de Notificações Moderno */}
       <div className="fixed top-6 right-6 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full px-4 md:px-0">
         {notifications.map((notif) => (
           <div
             key={notif.id}
-            className="pointer-events-auto relative overflow-hidden flex items-start gap-3 px-4 py-3.5 rounded-2xl border border-neutral-800 bg-black/95 text-sm shadow-2xl backdrop-blur-2xl transition-all"
+            className="pointer-events-auto relative overflow-hidden flex items-start gap-3 px-4 py-3.5 rounded-2xl border border-rose-500/30 bg-black/95 text-sm shadow-2xl backdrop-blur-2xl transition-all"
           >
             <div className="flex-1 space-y-0.5 pr-2">
-              <h4 className="text-xs font-bold text-white tracking-wide uppercase">{notif.title}</h4>
+              <h4 className="text-xs font-bold text-rose-300 tracking-wide uppercase">{notif.title}</h4>
               <p className="text-xs text-neutral-300 leading-relaxed break-words">{notif.text}</p>
             </div>
-            <div className="absolute bottom-0 left-0 h-0.5 bg-neutral-400 w-full opacity-60" />
+            <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-rose-500 to-pink-500 w-full opacity-80" />
           </div>
         ))}
       </div>
 
-      {/* Modal de Confirmação Padrão para Exclusão Total */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
@@ -525,7 +630,7 @@ export default function TempEmailPage() {
               </button>
               <button
                 onClick={executeDeleteAllMessages}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-medium text-white shadow-lg shadow-rose-600/25 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-xs font-medium text-white shadow-lg shadow-rose-600/25 transition-all cursor-pointer"
               >
                 Sim, excluir tudo
               </button>
@@ -534,7 +639,6 @@ export default function TempEmailPage() {
         </div>
       )}
 
-      {/* Modal Moderno para Exclusão de Selecionados */}
       {showBatchDeleteModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
@@ -559,7 +663,7 @@ export default function TempEmailPage() {
               </button>
               <button
                 onClick={executeBatchDelete}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-medium text-white shadow-lg shadow-rose-600/25 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-xs font-medium text-white shadow-lg shadow-rose-600/25 transition-all cursor-pointer"
               >
                 Confirmar exclusão
               </button>
@@ -568,20 +672,172 @@ export default function TempEmailPage() {
         </div>
       )}
 
+      {showNavbar && (
+        <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex justify-end">
+          <div 
+            ref={navbarRef}
+            className="w-full max-w-sm bg-gradient-to-b from-[#181116] via-[#120e12] to-neutral-950 border-l border-rose-500/20 h-full p-6 flex flex-col justify-between overflow-y-auto shadow-2xl"
+          >
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-rose-500/20 pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-gradient-to-r from-rose-500 to-pink-500" />
+                  <span className="text-xs font-bold text-rose-300 tracking-widest uppercase">Gerencie seu Email abaixo</span>
+                </div>
+                <button
+                  onClick={() => setShowNavbar(false)}
+                  className="p-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-rose-300 border border-rose-500/20 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="bg-[#1c1218]/90 border border-rose-500/20 rounded-3xl p-5 space-y-4 shadow-xl backdrop-blur-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+                    <span className="text-[11px] font-bold tracking-widest text-rose-400 uppercase">EMAIL ATIVO</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        if (account) generateTempEmail()
+                        else generateTempEmail()
+                      }}
+                      title="Gerar / Alternar"
+                      className="p-2 rounded-xl bg-neutral-900/80 hover:bg-rose-950/50 text-rose-300 border border-rose-500/20 transition-colors cursor-pointer"
+                    >
+                      <RefreshCw size={14} className={loadingAccount ? "animate-spin" : ""} />
+                    </button>
+                    <button
+                      onClick={copyToClipboard}
+                      disabled={!account}
+                      title="Copiar email"
+                      className="p-2 rounded-xl bg-neutral-900/80 hover:bg-rose-950/50 text-rose-300 border border-rose-500/20 transition-colors cursor-pointer disabled:opacity-40"
+                    >
+                      <Copy size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAccount(null)
+                        localStorage.removeItem("temp_mail_account")
+                        localStorage.removeItem("temp_mail_timestamp")
+                        setShowNavbar(false)
+                        showNotification("Removido", "Mailbox limpo com sucesso.", "info")
+                      }}
+                      disabled={!account}
+                      title="Excluir mailbox"
+                      className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors cursor-pointer disabled:opacity-40"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="break-all font-mono font-bold text-sm text-white">
+                  {account ? account.email : "Nenhum email criado"}
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-neutral-400 font-medium uppercase tracking-wider">Expirando em:</span>
+                    <span className="font-mono font-bold text-rose-400">
+                      {account ? formatExpiresIn(emailAgeSeconds) : "24h 00m 00s"}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden border border-rose-500/20 relative">
+                    <div 
+                      className="h-full bg-gradient-to-r from-rose-600 via-pink-500 to-rose-400"
+                      style={{ width: `${Math.min(100, (emailAgeSeconds / 86400) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#1c1218]/90 border border-rose-500/20 rounded-3xl p-5 space-y-4 shadow-xl backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-pink-500" />
+                  <span className="text-[11px] font-bold tracking-widest text-rose-400 uppercase">INFOS</span>
+                </div>
+
+                <div className="space-y-3.5 text-xs">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-neutral-400 font-medium">Tamanho: 240MB</span>
+                      <span className="font-mono font-bold text-rose-400">
+                        {storagePercentage.toFixed(2)}% ({formattedStorageSize})
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden border border-rose-500/20 relative">
+                      <div 
+                        className="h-full bg-gradient-to-r from-rose-600 via-pink-500 to-rose-400" 
+                        style={{ width: `${storagePercentage}%` }} 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-neutral-400 font-medium">Limite de emails diários</span>
+                      <span className="font-mono font-bold text-white">{dailyCreations} / {maxDailyCreations}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden border border-rose-500/20 relative">
+                      <div 
+                        className="h-full bg-gradient-to-r from-rose-600 via-pink-500 to-rose-400" 
+                        style={{ width: `${creationsPercentage}%` }} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-rose-500/25">
+              <button
+                onClick={() => {
+                  generateTempEmail()
+                  setShowNavbar(false)
+                }}
+                disabled={loadingAccount}
+                className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-xl shadow-rose-600/30 cursor-pointer group"
+              >
+                <div className="p-1 rounded-full bg-white/25 text-white">
+                  <RefreshCw size={14} className={loadingAccount ? "animate-spin" : ""} />
+                </div>
+                <span>Criar novo Email</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full flex-1 flex flex-col justify-between relative z-10">
         
-        {/* Cabeçalho com overflow visível para permitir o posicionamento livre do botão/popup */}
         <header className="w-full mb-6">
-          <div className="relative overflow-visible rounded-3xl border border-border bg-card/40 p-6 md:p-8 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:border-neutral-400/50 hover:shadow-[0_0_20px_rgba(150,150,150,0.1)] group">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-neutral-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative overflow-visible rounded-3xl border border-rose-500/20 bg-card/40 p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
             
-            <div className="flex items-center justify-between gap-4 relative z-10 flex-wrap">
+            <div className="absolute top-4 left-4 z-20">
+              <button
+                ref={menuButtonRef}
+                onClick={() => setShowNavbar(true)}
+                title="Abrir Menu Navbar"
+                className="p-3 rounded-2xl bg-neutral-900/90 hover:bg-neutral-800 text-white border border-rose-500/30 shadow-xl cursor-pointer flex flex-col items-center justify-center gap-1 w-11 h-11"
+              >
+                <div className="w-5 h-0.5 bg-rose-400 rounded-full" />
+                <div className="w-5 h-0.5 bg-rose-400 rounded-full" />
+                <div className="w-5 h-0.5 bg-rose-400 rounded-full" />
+              </button>
+            </div>
+
+            <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-center justify-between gap-4 relative z-10 flex-wrap pl-14 sm:pl-16">
               <div className="flex items-center gap-4">
                 <div className="flex shrink-0">
                   <img 
                     src="https://raw.githubusercontent.com/confiei/assets/main/c4604ba4541a1348122a2df3f65efe60.jpg" 
                     alt="TempMail Icon" 
-                    className="h-14 w-14 object-cover rounded-2xl"
+                    className="h-14 w-14 object-cover rounded-2xl border border-rose-500/20 shadow-md"
                   />
                 </div>
                 <div className="space-y-1">
@@ -589,23 +845,21 @@ export default function TempEmailPage() {
                     TempMail
                   </h1>
                   <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                    Proteja sua caixa de entrada principal contra spam de forma elegante.
+                    Feito por Mv | Se tentar copiar, Nós vai te buscar :3
                   </p>
                 </div>
               </div>
 
-              {/* Botão de Aviso */}
               <div className="relative">
                 <button
                   ref={warningButtonRef}
                   onClick={toggleWarningPanel}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs md:text-sm transition-all duration-300 shadow-lg shadow-rose-600/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer border border-rose-500/30"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-medium text-xs md:text-sm shadow-lg shadow-rose-600/25 cursor-pointer border border-rose-500/30"
                 >
                   <AlertTriangle size={16} />
                   <span>Leia, Importante!</span>
                 </button>
 
-                {/* Painel Flutuante renderizado via Portal diretamente no document.body com z-index máximo */}
                 {showWarningPanel && panelCoordinates && typeof window !== "undefined" && createPortal(
                   <div
                     ref={warningPanelRef}
@@ -613,16 +867,16 @@ export default function TempEmailPage() {
                       top: `${panelCoordinates.top}px`,
                       right: `${panelCoordinates.right}px`
                     }}
-                    className="fixed w-80 sm:w-96 rounded-3xl border border-neutral-800 bg-neutral-950/95 p-5 shadow-2xl backdrop-blur-2xl z-[99999] animate-in fade-in zoom-in-95 duration-200 text-left space-y-3.5 max-w-[calc(100vw-2rem)]"
+                    className="fixed w-80 sm:w-96 rounded-3xl border border-rose-500/30 bg-neutral-950/95 p-5 shadow-2xl backdrop-blur-2xl z-[99999] text-left space-y-3.5 max-w-[calc(100vw-2rem)]"
                   >
-                    <div className="flex items-center justify-between border-b border-neutral-800/80 pb-3">
+                    <div className="flex items-center justify-between border-b border-rose-500/20 pb-3">
                       <div className="flex items-center gap-2 text-rose-400">
                         <AlertTriangle size={18} />
                         <h3 className="text-xs font-bold uppercase tracking-wider text-white">Aviso Importante</h3>
                       </div>
                       <button
                         onClick={() => setShowWarningPanel(false)}
-                        className="p-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white border border-rose-500/30 transition-colors cursor-pointer shadow-md shadow-rose-600/30"
+                        className="p-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border border-rose-500/30 transition-colors cursor-pointer shadow-md shadow-rose-600/30"
                         title="Fechar painel"
                       >
                         <X size={15} />
@@ -650,13 +904,12 @@ export default function TempEmailPage() {
         </header>
 
         <main className="space-y-4 md:space-y-5 flex-1 flex flex-col">
-          {/* Card Principal do Endereço de Email ou Tela Inicial de Boas-Vindas */}
           {!account ? (
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-card/40 p-8 md:p-12 backdrop-blur-2xl shadow-2xl flex flex-col items-center justify-center text-center space-y-6">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-neutral-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative overflow-hidden rounded-3xl border border-rose-500/20 bg-card/40 p-8 md:p-12 backdrop-blur-2xl shadow-2xl flex flex-col items-center justify-center text-center space-y-6">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
               
-              <div className="h-16 w-16 rounded-2xl bg-secondary/50 border border-border flex items-center justify-center text-primary shadow-inner">
-                <Mail size={32} className="animate-pulse" />
+              <div className="h-16 w-16 rounded-2xl bg-secondary/50 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-inner">
+                <Mail size={32} />
               </div>
 
               <div className="space-y-2 max-w-md">
@@ -669,15 +922,15 @@ export default function TempEmailPage() {
               <button
                 onClick={generateTempEmail}
                 disabled={loadingAccount}
-                className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs md:text-sm transition-all duration-300 shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-medium text-xs md:text-sm shadow-lg shadow-rose-600/25 disabled:opacity-50 cursor-pointer border border-rose-500/30"
               >
                 <RefreshCw size={18} className={loadingAccount ? "animate-spin" : ""} />
                 <span>Novo Email</span>
               </button>
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-card/40 p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-neutral-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative overflow-hidden rounded-3xl border border-rose-500/20 bg-card/40 p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
                 <div className="space-y-2">
@@ -687,16 +940,16 @@ export default function TempEmailPage() {
                     <div className="flex items-center gap-2">
                       {loadingAccount ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          <Circle size={6} className="animate-ping fill-amber-400" /> Gerando...
+                          <Circle size={6} className="fill-amber-400" /> Gerando...
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm">
-                          <Circle size={6} className="fill-emerald-400 animate-pulse" /> Email ativo
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-sm">
+                          <Circle size={6} className="fill-rose-400" /> Email ativo
                         </span>
                       )}
 
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-secondary/50 text-secondary-foreground border border-border">
-                        <Clock size={11} className="text-primary" /> {formatAgeTime(emailAgeSeconds)}
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-secondary/50 text-secondary-foreground border border-rose-500/20">
+                        <Clock size={11} className="text-rose-400" /> {formatExpiresIn(emailAgeSeconds)}
                       </span>
                     </div>
                   </div>
@@ -704,7 +957,7 @@ export default function TempEmailPage() {
                   <div className="flex items-center gap-3 pt-1">
                     {loadingAccount ? (
                       <div className="flex items-center gap-2.5 text-muted-foreground py-2">
-                        <Loader2 className="animate-spin text-primary" size={20} />
+                        <Loader2 className="animate-spin text-rose-400" size={20} />
                         <span className="text-sm">Configurando caixa de correio...</span>
                       </div>
                     ) : (
@@ -719,7 +972,7 @@ export default function TempEmailPage() {
                   <button
                     onClick={copyToClipboard}
                     disabled={loadingAccount || !account}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition-all duration-300 shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-medium text-xs shadow-lg shadow-rose-600/25 disabled:opacity-50 cursor-pointer border border-rose-500/30"
                   >
                     {copied ? (
                       <CheckCheck size={16} />
@@ -733,9 +986,9 @@ export default function TempEmailPage() {
                     onClick={generateTempEmail}
                     disabled={loadingAccount}
                     title="Gerar Novo Endereço"
-                    className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-card/60 hover:bg-card border border-border text-foreground font-medium text-xs transition-all duration-300 hover:border-neutral-400/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
+                    className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-card/60 hover:bg-card border border-rose-500/20 text-foreground font-medium text-xs disabled:opacity-50 cursor-pointer shadow-sm"
                   >
-                    <RefreshCw size={16} className={loadingAccount ? "animate-spin" : "hover:rotate-180 transition-transform duration-500"} />
+                    <RefreshCw size={16} className={loadingAccount ? "animate-spin" : ""} />
                     <span>Novo Email</span>
                   </button>
                 </div>
@@ -743,31 +996,28 @@ export default function TempEmailPage() {
             </div>
           )}
 
-          {/* Seção da Caixa / Leitor */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
             
-            {/* Lista de Mensagens (Inbox) - 5 colunas */}
-            <div className="lg:col-span-5 rounded-3xl border border-border bg-card/40 backdrop-blur-xl flex flex-col h-[550px] overflow-hidden shadow-2xl transition-all duration-300 hover:border-neutral-400/40">
+            <div className="lg:col-span-5 rounded-3xl border border-rose-500/20 bg-card/40 backdrop-blur-xl flex flex-col h-[550px] overflow-hidden shadow-2xl">
               
-              <div className="p-4 border-b border-border flex items-center justify-between bg-card/20 flex-wrap gap-2">
+              <div className="p-4 border-b border-rose-500/20 flex items-center justify-between bg-card/20 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <Inbox size={18} className="text-primary" />
+                  <Inbox size={18} className="text-rose-400" />
                   <h2 className="text-sm font-semibold text-foreground">Caixa de Entrada</h2>
                   
-                  {/* Botão Extrair Mensagens */}
                   <div className="relative group/extract">
                     <button
                       onClick={handleExtractMessages}
                       disabled={messages.length === 0 || extractingMessages}
                       title={messages.length === 0 ? "Nenhuma mensagem disponível para exportar." : "Extrair Mensagens"}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all duration-300 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border ${
                         messages.length === 0 
                           ? "bg-secondary/20 border-border text-muted-foreground/50 opacity-50 cursor-not-allowed" 
-                          : "bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary shadow-md shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                          : "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 text-rose-400 shadow-md shadow-rose-500/10 cursor-pointer"
                       }`}
                     >
                       {extractingMessages ? (
-                        <Loader2 size={14} className="animate-spin text-primary" />
+                        <Loader2 size={14} className="animate-spin text-rose-400" />
                       ) : (
                         <Download size={14} />
                       )}
@@ -786,10 +1036,10 @@ export default function TempEmailPage() {
                   <button
                     onClick={toggleSelectionMode}
                     disabled={messages.length === 0}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all disabled:opacity-40 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border disabled:opacity-40 cursor-pointer ${
                       isSelectionMode 
-                        ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20" 
-                        : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        ? "bg-gradient-to-r from-rose-600 to-pink-600 border-rose-500 text-white shadow-md shadow-rose-600/20" 
+                        : "bg-secondary/50 border-rose-500/20 text-muted-foreground hover:bg-secondary hover:text-foreground"
                     }`}
                   >
                     {isSelectionMode ? "Concluir" : "Selecionar"}
@@ -799,34 +1049,33 @@ export default function TempEmailPage() {
                     onClick={handleMarkAllAsRead}
                     disabled={messages.length === 0 || isSelectionMode}
                     title="Ler todos os emails"
-                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent hover:border-border transition-all disabled:opacity-40 cursor-pointer"
+                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent hover:border-rose-500/20 disabled:opacity-40 cursor-pointer"
                   >
-                    <CheckCheck size={16} className="hover:scale-110 transition-transform" />
+                    <CheckCheck size={16} />
                   </button>
 
                   <button
                     onClick={() => setShowDeleteModal(true)}
                     disabled={messages.length === 0 || isSelectionMode}
                     title="Excluir todos os emails"
-                    className="p-2 rounded-xl text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all disabled:opacity-40 cursor-pointer"
+                    className="p-2 rounded-xl text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 disabled:opacity-40 cursor-pointer"
                   >
-                    <Trash size={16} className="hover:scale-110 transition-transform" />
+                    <Trash size={16} />
                   </button>
 
                   <button 
                     onClick={() => account && fetchMessages(account.token)}
                     disabled={loadingMessages || !account}
                     title="Atualizar Inbox"
-                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent hover:border-border transition-all cursor-pointer disabled:opacity-40"
+                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent hover:border-rose-500/20 cursor-pointer disabled:opacity-40"
                   >
-                    <RefreshCw size={16} className={loadingMessages ? "animate-spin text-primary" : "hover:rotate-180 transition-transform duration-500"} />
+                    <RefreshCw size={16} className={loadingMessages ? "animate-spin" : ""} />
                   </button>
                 </div>
               </div>
 
-              {/* Sub-topo Dinâmico do Modo de Seleção */}
               {isSelectionMode ? (
-                <div className="px-4 py-2.5 bg-card/20 border-b border-border flex items-center justify-between text-xs text-foreground">
+                <div className="px-4 py-2.5 bg-card/20 border-b border-rose-500/20 flex items-center justify-between text-xs text-foreground">
                   <span className="font-semibold">
                     {selectedEmailIds.length} {selectedEmailIds.length === 1 ? 'email selecionado' : 'emails selecionados'}
                   </span>
@@ -836,33 +1085,33 @@ export default function TempEmailPage() {
                         setIsSelectionMode(false)
                         setSelectedEmailIds([])
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-secondary/50 hover:bg-secondary text-[11px] text-muted-foreground transition-colors border border-border cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-secondary/50 hover:bg-secondary text-[11px] text-muted-foreground transition-colors border border-rose-500/20 cursor-pointer"
                     >
                       Cancelar seleção
                     </button>
                     <button
                       onClick={() => setShowBatchDeleteModal(true)}
                       disabled={selectedEmailIds.length === 0}
-                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-[11px] font-medium text-white shadow-sm transition-all disabled:opacity-40 cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-[11px] font-medium text-white shadow-sm disabled:opacity-40 cursor-pointer"
                     >
                       Excluir selecionados
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="px-4 py-2 bg-card/20 border-b border-border flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+                <div className="px-4 py-2 bg-card/20 border-b border-rose-500/20 flex items-center justify-between text-[11px] text-muted-foreground font-mono">
                   <span className="flex items-center gap-1.5">
-                    <Radio size={11} className={`text-primary ${loadingMessages ? 'animate-ping' : ''}`} />
+                    <Radio size={11} className={`text-rose-400 ${loadingMessages ? 'animate-ping' : ''}`} />
                     {syncStatus}
                   </span>
                   <span className="text-muted-foreground font-medium">total: {messages.length}</span>
                 </div>
               )}
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 relative bg-transparent">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 relative bg-transparent scrollbar-thin scrollbar-thumb-rose-500/40 scrollbar-track-transparent">
                 {!account ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-                    <div className="h-12 w-12 rounded-2xl bg-secondary/50 border border-border flex items-center justify-center text-muted-foreground shadow-inner">
+                    <div className="h-12 w-12 rounded-2xl bg-secondary/50 border border-rose-500/20 flex items-center justify-center text-muted-foreground shadow-inner">
                       <Inbox size={20} />
                     </div>
                     <div className="space-y-1">
@@ -872,12 +1121,15 @@ export default function TempEmailPage() {
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-                    <div className="h-12 w-12 rounded-2xl bg-secondary/50 border border-border flex items-center justify-center text-muted-foreground shadow-inner">
-                      <Clock size={20} className="animate-spin duration-1000" />
+                    <div className="h-12 w-12 rounded-2xl bg-secondary/50 border border-rose-500/20 flex items-center justify-center text-muted-foreground shadow-inner">
+                      <Inbox size={20} className="text-rose-400" />
                     </div>
                     <div className="space-y-1">
                       <h3 className="text-xs font-semibold text-foreground">Caixa de entrada vazia</h3>
-                      <p className="text-[11px] text-muted-foreground max-w-[200px]">Nenhuma mensagem recebida ainda.</p>
+                      <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                        <Loader2 size={14} className="animate-spin text-rose-400" />
+                        <span>Aguardando mensagens</span>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -891,33 +1143,33 @@ export default function TempEmailPage() {
                       <div
                         key={msg.id}
                         onClick={() => fetchMessageDetails(msg.id)}
-                        className={`group p-3.5 rounded-2xl border transition-all duration-300 cursor-pointer text-left space-y-2 relative transform animate-in fade-in-50 zoom-in-95 ${
+                        className={`group p-3.5 rounded-2xl border cursor-pointer text-left space-y-2 relative ${
                           isItemChecked
-                            ? "bg-secondary/40 border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-lg text-foreground scale-[1.01]"
+                            ? "bg-secondary/40 border-rose-500/50 ring-1 ring-rose-500/30 shadow-lg text-foreground"
                             : isSelected 
-                            ? "bg-secondary/40 border-primary/50 ring-1 ring-primary/20 shadow-lg text-foreground" 
-                            : "bg-card/40 border-border hover:border-neutral-400/40 hover:bg-card/60 text-muted-foreground"
-                        } ${!msg.seen ? 'border-l-2 border-l-primary shadow-sm' : ''}`}
+                            ? "bg-secondary/40 border-rose-500/50 ring-1 ring-rose-500/20 shadow-lg text-foreground" 
+                            : "bg-card/40 border-rose-500/20 hover:border-rose-500/40 hover:bg-card/60 text-muted-foreground"
+                        } ${!msg.seen ? 'border-l-2 border-l-rose-500 shadow-sm' : ''}`}
                       >
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                           <div className="flex items-center gap-2.5 truncate">
                             {isSelectionMode && (
                               <div className="flex items-center justify-center shrink-0">
                                 <div 
-                                  className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all duration-300 transform ${
+                                  className={`w-5 h-5 rounded-lg border flex items-center justify-center ${
                                     isItemChecked 
-                                      ? "bg-emerald-600 border-emerald-500 shadow-md shadow-emerald-600/30 scale-110" 
-                                      : "bg-secondary/50 border-border hover:border-muted-foreground"
+                                      ? "bg-gradient-to-r from-rose-600 to-pink-600 border-rose-500 shadow-md shadow-rose-600/30" 
+                                      : "bg-secondary/50 border-rose-500/20 hover:border-muted-foreground"
                                   }`}
                                 >
                                   {isItemChecked && (
-                                    <Check size={13} className="text-white stroke-[3] transition-transform duration-300 scale-100 animate-in zoom-in-50" />
+                                    <Check size={13} className="text-white stroke-[3]" />
                                   )}
                                 </div>
                               </div>
                             )}
 
-                            <div className="h-6 w-6 rounded-full bg-secondary/50 border border-border text-foreground font-bold flex items-center justify-center text-[10px] shadow-sm shrink-0">
+                            <div className="h-6 w-6 rounded-full bg-secondary/50 border border-rose-500/20 text-foreground font-bold flex items-center justify-center text-[10px] shadow-sm shrink-0">
                               {firstLetter}
                             </div>
                             <span className="font-semibold truncate max-w-[120px] text-foreground">
@@ -927,11 +1179,11 @@ export default function TempEmailPage() {
 
                           <div className="flex items-center gap-2 shrink-0">
                             {!msg.seen ? (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] uppercase font-bold tracking-wider bg-primary/20 text-primary border border-primary/30 shadow-sm animate-pulse">
+                              <span className="px-2 py-0.5 rounded-full text-[9px] uppercase font-bold tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm">
                                 Novo
                               </span>
                             ) : (
-                              <span className="px-1.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider bg-secondary/50 text-muted-foreground border border-border">
+                              <span className="px-1.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider bg-secondary/50 text-muted-foreground border border-rose-500/20">
                                 Lido
                               </span>
                             )}
@@ -942,7 +1194,7 @@ export default function TempEmailPage() {
                         </div>
 
                         <div>
-                          <p className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                          <p className="text-xs font-bold text-foreground truncate">
                             {msg.subject || "(Sem assunto)"}
                           </p>
                           <p className="text-[11px] text-muted-foreground truncate pt-0.5">
@@ -956,16 +1208,15 @@ export default function TempEmailPage() {
               </div>
             </div>
 
-            {/* Visualizador de Email Completo - 7 colunas */}
-            <div className="lg:col-span-7 rounded-3xl border border-border bg-card/40 backdrop-blur-xl flex flex-col h-[550px] overflow-hidden shadow-2xl transition-all duration-300 hover:border-neutral-400/40">
+            <div className="lg:col-span-7 rounded-3xl border border-rose-500/20 bg-card/40 backdrop-blur-xl flex flex-col h-[550px] overflow-hidden shadow-2xl">
               {selectedMessage ? (
-                <div className="flex flex-col h-full animate-in fade-in duration-300">
-                  <div className="p-4 md:p-5 border-b border-border bg-card/20 flex items-center justify-between gap-4">
+                <div className="flex flex-col h-full">
+                  <div className="p-4 md:p-5 border-b border-rose-500/20 bg-card/20 flex items-center justify-between gap-4">
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2.5">
                         <button
                           onClick={() => setSelectedMessage(null)}
-                          className="lg:hidden p-1.5 rounded-xl bg-secondary/50 text-primary hover:bg-secondary transition-colors"
+                          className="lg:hidden p-1.5 rounded-xl bg-secondary/50 text-rose-400 hover:bg-secondary transition-colors"
                         >
                           <ArrowLeft size={16} />
                         </button>
@@ -975,7 +1226,7 @@ export default function TempEmailPage() {
                       </div>
 
                       <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
-                        <div className="h-5 w-5 rounded-full bg-secondary/50 text-foreground font-bold flex items-center justify-center text-[10px] shrink-0 border border-border">
+                        <div className="h-5 w-5 rounded-full bg-secondary/50 text-foreground font-bold flex items-center justify-center text-[10px] shrink-0 border border-rose-500/20">
                           {(selectedMessage.from.name || selectedMessage.from.address).charAt(0).toUpperCase()}
                         </div>
                         <span className="truncate">
@@ -990,49 +1241,83 @@ export default function TempEmailPage() {
                       <button
                         onClick={copyEmailContent}
                         title="Copiar conteúdo"
-                        className="p-2 rounded-xl bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer border border-border"
+                        className="p-2 rounded-xl bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer border border-rose-500/20"
                       >
                         <Copy size={15} />
                       </button>
 
-                      <span className="text-xs text-muted-foreground font-mono hidden sm:inline-block bg-secondary/50 px-2.5 py-1 rounded-lg border border-border">
+                      <span className="text-xs text-muted-foreground font-mono hidden sm:inline-block bg-secondary/50 px-2.5 py-1 rounded-lg border border-rose-500/20">
                         {new Date(selectedMessage.createdAt).toLocaleString()}
                       </span>
 
                       <button
                         onClick={() => setSelectedMessage(null)}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary/50 hover:bg-secondary border border-border text-muted-foreground hover:text-foreground text-xs font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.96] shadow-sm cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary/50 hover:bg-secondary border border-rose-500/20 text-muted-foreground hover:text-foreground text-xs font-medium shadow-sm cursor-pointer"
                         title="Fechar mensagem"
                       >
-                        <X size={15} className="text-muted-foreground hover:text-foreground transition-colors" />
+                        <X size={15} />
                         <span>Fechar</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex-1 p-5 overflow-y-auto bg-transparent text-xs text-muted-foreground">
+                  <div className="flex-1 p-5 overflow-y-auto bg-white text-xs text-neutral-900">
                     {loadingDetails ? (
-                      <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                        <Loader2 className="animate-spin text-primary" size={24} />
-                        <span>Carregando conteúdo da mensagem...</span>
+                      <div className="h-full flex flex-col items-center justify-center gap-3 text-neutral-800">
+                        <Loader2 className="animate-spin text-rose-600" size={24} />
+                        <span className="text-neutral-800">Carregando conteúdo da mensagem...</span>
                       </div>
                     ) : selectedMessage.html && selectedMessage.html.length > 0 ? (
                       <iframe
-                        srcDoc={selectedMessage.html[0]}
+                        srcDoc={`
+                          <!DOCTYPE html>
+                          <html>
+                            <head>
+                              <style>
+                                ::-webkit-scrollbar {
+                                  width: 8px;
+                                  height: 8px;
+                                }
+                                ::-webkit-scrollbar-track {
+                                  background: #f1f1f1;
+                                }
+                                ::-webkit-scrollbar-thumb {
+                                  background: #cbd5e1;
+                                  border-radius: 9999px;
+                                  border: 2px solid #f1f1f1;
+                                }
+                                ::-webkit-scrollbar-thumb:hover {
+                                  background: #94a3b8;
+                                }
+                                body {
+                                  background-color: #ffffff !important;
+                                  color: #0f172a !important;
+                                  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                                  padding: 16px;
+                                  margin: 0;
+                                  word-break: break-word;
+                                }
+                              </style>
+                            </head>
+                            <body>
+                              ${selectedMessage.html[0]}
+                            </body>
+                          </html>
+                        `}
                         title="Conteúdo do Email"
-                        className="w-full h-full bg-white rounded-xl border border-border shadow-inner"
+                        className="w-full h-full bg-white rounded-xl border border-neutral-200 shadow-inner"
                       />
                     ) : (
-                      <div className="whitespace-pre-wrap font-mono text-foreground bg-secondary/20 p-4 rounded-xl border border-border leading-relaxed">
+                      <div className="whitespace-pre-wrap font-mono text-neutral-900 bg-neutral-100 p-4 rounded-xl border border-neutral-200 leading-relaxed">
                         {selectedMessage.text || "Conteúdo vazio ou indisponível."}
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 animate-in fade-in duration-300 bg-transparent">
-                  <div className="h-16 w-16 rounded-3xl bg-secondary/50 border border-border flex items-center justify-center text-muted-foreground shadow-inner">
-                    <Mail size={28} className="animate-pulse" />
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 bg-transparent">
+                  <div className="h-16 w-16 rounded-3xl bg-secondary/50 border border-rose-500/20 flex items-center justify-center text-muted-foreground shadow-inner">
+                    <Mail size={28} className="text-rose-400" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
                     <h3 className="text-sm font-bold text-foreground tracking-wide">Nenhuma mensagem selecionada</h3>
@@ -1045,18 +1330,17 @@ export default function TempEmailPage() {
           </div>
         </main>
 
-        {/* Rodapé / Barra de Status Profissional */}
-        <footer className="pt-5 border-t border-border mt-6 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-between gap-3">
+        <footer className="pt-5 border-t border-rose-500/20 mt-6 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="font-medium text-muted-foreground">Todos os direitos reservados. © 2026 Christian</span>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 font-mono text-[11px]">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Online
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-[pulse_2.5s_cubic-bezier(0.4,0,0.6,1)_infinite]" />
+              Status dos Emails
             </span>
-            <span className="text-border">|</span>
+            <span className="text-rose-500/35">|</span>
             <span className="font-mono text-[11px] text-muted-foreground">
               {messages.length} {messages.length === 1 ? 'mensagem' : 'mensagens'}
             </span>

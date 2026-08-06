@@ -212,6 +212,7 @@ export function getStatus() {
 const PAGE_PRESENCE: Record<string, { details: string; state?: string }> = {
   '/': { details: 'Visão Geral', state: 'No dashboard' },
   '/analytics': { details: 'Analytics', state: 'Analisando estatísticas' },
+  '/temp-mail': { details: 'TempMail', state: 'Usando' },
   '/limpar-dm': { details: 'Limpar DM', state: 'Gerenciando mensagens' },
   '/limpar-dm-amigos': { details: 'Limpar DM Amigos', state: 'Limpeza de DMs de amigos' },
   '/limpar-dms': { details: 'Limpar DMs', state: 'Limpeza em massa' },
